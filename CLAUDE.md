@@ -12,6 +12,7 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Teksten in app en README: Nederlands, taalniveau B1.
 - Geen vermelding van AI-hulp, nergens: geen `Co-Authored-By`, geen sessielinks, geen "generated with" in commits, PR's, code of documentatie.
 - Commits op naam van `Hayo Bethlehem <mail@hayobethlehem.nl>` (zet `git config user.name/user.email` in de clone).
+- Ook dit bestand niet bij naam noemen in code, README of commitberichten. Controleer voor elke push: `git grep -niE 'claude|anthropic' -- docs README.md` moet leeg zijn, en lees het commitbericht na.
 - De repo is public. Dus nooit RO Sans-bestanden, logo's of opnames in de repo.
 - HTML, CSS en JavaScript volgen de standaarden en zijn semantisch correct. Elke wijziging moet zonder fouten door: W3C Nu HTML Checker (`vnu`, ook met `--css`), `html-validate` (recommended), `stylelint-config-standard`, ESLint (recommended, `eqeqeq`) en axe-core (WCAG 2.2 AA + best practices).
 - Semantiek: `section` met kop voor kolommen en speler (geen `nav`/`footer`), `time datetime` voor duren, `aria-current` voor het gekozen ministerie en de opname in de speler.
