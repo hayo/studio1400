@@ -540,22 +540,18 @@ label.knop:focus-within {
   gap: 16px;
 }
 
-.knoppen-einde {
-  justify-content: flex-end;
-  margin-top: 8px;
-}
-
-/* ---------- Beheer ---------- */
+/* ---------- Beheer: kleinere letter, zodat alles in beeld past ---------- */
 
 .beheer {
-  width: min(680px, calc(100vw - 48px));
-  max-height: calc(100dvh - 48px);
-  padding: 32px;
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 20px 28px 8px;
   overflow-y: auto;
   border: 0;
-  border-top: 8px solid var(--robijnrood);
+  border-top: 6px solid var(--robijnrood);
   border-radius: var(--rond);
   color: var(--zwart);
+  font-size: 17px;
   box-shadow: var(--schaduw);
 
   /* stylelint-disable-next-line property-no-vendor-prefix */
@@ -565,20 +561,52 @@ label.knop:focus-within {
 
 .beheer::backdrop { background: rgb(21 66 115 / 55%); }
 
-.beheer h2 {
-  margin-bottom: 16px;
-  color: var(--lintblauw);
-  font-size: 30px;
+.beheer-kop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--lijn);
 }
 
-.beheer h3 { font-size: 22px; }
+.beheer h2 {
+  color: var(--lintblauw);
+  font-size: 26px;
+}
+
+.versie {
+  margin-left: 8px;
+  color: var(--grijs);
+  font-size: 16px;
+}
+
+.beheer h3 {
+  color: var(--lintblauw);
+  font-size: 19px;
+}
+
+#beheer-waarschuwing { margin-top: 12px; }
 
 .beheer-blok {
   display: grid;
+  align-content: start;
   justify-items: start;
-  gap: 12px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--lijn);
+  gap: 8px;
+  padding: 14px 0;
+}
+
+.beheer-rij {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  border-top: 1px solid var(--lijn);
+}
+
+.beheer .knop {
+  min-height: 48px;
+  padding: 0 20px;
+  font-size: 17px;
 }
 
 .inlezen {
@@ -598,7 +626,7 @@ label.knop:focus-within {
 
 .melding {
   width: 100%;
-  padding: 12px 16px;
+  padding: 8px 12px;
   border-left: 6px solid var(--lintblauw);
   border-radius: 6px;
   background: var(--tint);
@@ -639,6 +667,8 @@ label.knop:focus-within {
   }
 
   .ministeries { max-height: 36vh; }
+
+  .beheer-rij { grid-template-columns: 1fr; }
 
   .speler-knop {
     width: 64px;

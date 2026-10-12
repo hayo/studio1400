@@ -7,7 +7,7 @@
  * Verhoog VERSIE hier én in sw.js bij elke wijziging.
  */
 
-const VERSIE = '1.1.3';
+const VERSIE = '1.1.4';
 const RUST_NA_MS = 2 * 60 * 1000;
 const LANG_DRUKKEN_MS = 3000;
 const UPDATE_ELKE_MS = 6 * 60 * 60 * 1000;

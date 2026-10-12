@@ -56,6 +56,7 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Kop is één witte balk van 72 px: titel links, logo (72 px) in het midden vanaf de bovenrand, lintblauwe lijn met robijnrood stukje eronder. Een aparte blauwe balk plus logostrook kostte zo veel hoogte dat liggend maar 4 ministeries zichtbaar waren.
 - Hoogtebudget liggend (1180×820): kop 76, speler 100, marges 32. Dan passen 8 van de 12 ministeries; de rest scrollt, met een schaduw onderaan als hint. Staand passen alle 12. Uitleg staat in de kolomkop ("Kies een ministerie"), niet in de kop.
 - Ministerie en titel staan in de speler op één regel om hoogte te sparen.
+- Beheer moet zonder scrollen passen op 1133×744 (iPad mini liggend): letter 17 px, knoppen 48 px (alleen voor de beheerder), Sluiten bovenin naast de titel, Opslag en App naast elkaar. Gemeten: 679 px hoog met waarschuwing en een lange melding.
 - `vnu` weigert localhost-URL's. Controleer bestanden direct; de CSP-meldingen (info) zijn dan een bijeffect van `file:`.
 
 ## Testen

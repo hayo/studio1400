@@ -78,7 +78,10 @@
   </section>
 
   <dialog id="beheer" class="beheer" aria-labelledby="beheer-kop">
-    <h2 id="beheer-kop">Beheer</h2>
+    <div class="beheer-kop">
+      <h2 id="beheer-kop">Beheer <span class="versie">versie <span id="versie"></span></span></h2>
+      <button type="button" class="knop knop-tweede" id="knop-sluiten">Sluiten</button>
+    </div>
 
     <p id="beheer-waarschuwing" class="melding melding-let-op" hidden>Je gebruikt de app nu in Safari. Zet hem eerst op het beginscherm en lees de map daar in. Safari en de app op het beginscherm delen geen opslag.</p>
 
@@ -96,22 +99,19 @@
       <p id="beheer-melding" class="melding" aria-live="polite" hidden></p>
     </section>
 
-    <section class="beheer-blok">
-      <h3>Opslag</h3>
-      <p id="opslag-tekst" class="regels">Bezig met ophalen…</p>
-    </section>
+    <div class="beheer-rij">
+      <section class="beheer-blok">
+        <h3>Opslag</h3>
+        <p id="opslag-tekst" class="regels">Bezig met ophalen…</p>
+      </section>
 
-    <section class="beheer-blok">
-      <h3>App</h3>
-      <p>Versie <span id="versie"></span></p>
-      <div class="knoppen">
-        <button type="button" class="knop knop-tweede" id="knop-update">Zoek naar update</button>
-        <button type="button" class="knop knop-gevaar" id="knop-wissen">Alle opnames wissen</button>
-      </div>
-    </section>
-
-    <div class="knoppen knoppen-einde">
-      <button type="button" class="knop" id="knop-sluiten">Sluiten</button>
+      <section class="beheer-blok">
+        <h3>App</h3>
+        <div class="knoppen">
+          <button type="button" class="knop knop-tweede" id="knop-update">Zoek naar update</button>
+          <button type="button" class="knop knop-gevaar" id="knop-wissen">Alle opnames wissen</button>
+        </div>
+      </section>
     </div>
   </dialog>
 
