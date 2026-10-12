@@ -24,7 +24,8 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Bestanden: `index.html`, `app.css`, `app.js`, `sw.js`, `manifest.webmanifest`, `iconen/`.
 - Opnames: beheerder kiest een map via `<input webkitdirectory>`. Bestanden gaan als blob in IndexedDB (`studio1400`; stores `meta`, `opnames`, `audio`, `huisstijl`). Ze gaan nooit online.
 - Elke inleesronde krijgt een batch-id. Oude records gaan pas weg als de nieuwe ronde gelukt is (`ruimOp`).
-- Map-indeling: eerste submap = ministerie. Submappen met `_` worden overgeslagen. `_huisstijl` levert lettertypen (FontFace "RO Sans") en `logo.svg/png`.
+- Map-indeling: eerste submap = ministerie. Submappen met `_` worden overgeslagen. `_huisstijl` levert lettertypen (FontFace "RO Sans", of "RO Serif" bij `serif` zonder `sans`) en een logo (svg/png met `logo` in de naam). Fonts met `icon` in de naam worden overgeslagen.
+- Aangeleverde huisstijlbestanden (staan op de iPad, niet in de repo): `header-logo.svg` (lint met beeldmerk, 50×100), `rijks-sans-regular.woff2`, `rijks-sans-italic.woff2`, `ro-serif-italic.woff2`, `ro-icons.woff2`. Een vette RO Sans ontbreekt; de browser maakt vet nu zelf.
 - Volgnummers vooraan (`01 - `, `1. `) bepalen de volgorde en worden niet getoond. Een los nummer (`10 Titel`) alleen weg als een buur met `0` begint.
 - Beheer openen: 3 s drukken op de blauwe balk. Rust-reset na 2 min zonder gebruik (niet tijdens afspelen); updates van de service worker gaan dan ook in.
 - `VERSIE` staat in `app.js` én `sw.js`. Altijd allebei ophogen.
@@ -50,6 +51,8 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - `:has()` (Safari 15.4+) gebruiken we om de lege ministeriekaart te verbergen: `.inhoud:has(> .ministeries[hidden])`.
 - Overgangen op knoppen (150 ms): wacht in tests even voor een schermafbeelding. `prefers-reduced-motion` zet alle animaties uit.
 - De meldingen na inlezen pas tonen als de bibliotheek opnieuw is geladen, anders laat Beheer verouderde opslaggegevens zien.
+- Een iconenfont in `_huisstijl` zou zonder filter als gewone RO Sans laden en tekst in iconen veranderen. Daarom slaat `LETTER` namen met `icon` over.
+- Het logo hangt zonder marge vanaf de bovenrand (88 px hoog), zoals het lint in de Rijkshuisstijl.
 - `vnu` weigert localhost-URL's. Controleer bestanden direct; de CSP-meldingen (info) zijn dan een bijeffect van `file:`.
 
 ## Testen
@@ -61,6 +64,6 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 ## Open punten
 
 - Testen op een echte iPad: afspelen na tik, map inlezen, blijvende opslag, Begeleide toegang.
-- Officieel logo en RO Sans aanleveren in `_huisstijl`.
+- Vette RO Sans (`rijks-sans-bold.woff2`) aanleveren in `_huisstijl`.
 - Kleuren van communicatierijk.nl zijn niet bekeken (browser niet gebruikt). Robijnrood komt uit de Rijkshuisstijl; nog vergelijken met de site.
 - VoiceOver op iPad: controleren of de lijsten als lijst worden voorgelezen (WebKit laat dat soms vallen bij `list-style: none`).

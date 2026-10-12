@@ -7,7 +7,7 @@
  * Verhoog VERSIE hier én in app.js bij elke wijziging. Anders haalt de iPad de nieuwe versie niet op.
  */
 
-const VERSIE = '1.1.0';
+const VERSIE = '1.1.1';
 const CACHE = `studio1400-${VERSIE}`;
 const BESTANDEN = [
   './',

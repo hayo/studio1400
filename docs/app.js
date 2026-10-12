@@ -7,15 +7,15 @@
  * Verhoog VERSIE hier én in sw.js bij elke wijziging.
  */
 
-const VERSIE = '1.1.0';
+const VERSIE = '1.1.1';
 const RUST_NA_MS = 2 * 60 * 1000;
 const LANG_DRUKKEN_MS = 3000;
 const UPDATE_ELKE_MS = 6 * 60 * 60 * 1000;
 const OVERIG = 'Overige opnames';
 const WINKELS = ['meta', 'opnames', 'audio', 'huisstijl'];
 const AUDIO = /\.(mp3|m4a|aac|wav)$/i;
-const LETTER = /\.(woff2?|ttf|otf)$/i;
-const LOGO = /^logo\.(svg|png|jpe?g|webp)$/i;
+const LETTER = /^(?!.*icon).*\.(woff2?|ttf|otf)$/i; // iconenfonts niet als tekstletter laden
+const LOGO = /logo.*\.(svg|png|jpe?g|webp)$/i;
 const MIME = {
   mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', wav: 'audio/wav',
   woff2: 'font/woff2', woff: 'font/woff', ttf: 'font/ttf', otf: 'font/otf',

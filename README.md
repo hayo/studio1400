@@ -31,9 +31,9 @@ Studio1400/
 ├── 02 Binnenlandse Zaken en Koninkrijksrelaties/
 │   └── Interview.mp3
 ├── _huisstijl/
-│   ├── RO Sans Regular.woff2
-│   ├── RO Sans Bold.woff2
-│   └── logo.svg
+│   ├── rijks-sans-regular.woff2
+│   ├── rijks-sans-italic.woff2
+│   └── header-logo.svg
 └── _archief/
     └── oude opname.mp3
 ```
@@ -50,7 +50,9 @@ Studio1400/
 RO Sans en het logo horen niet in een openbare repo. Zet ze daarom in de submap `_huisstijl`:
 
 - de lettertypebestanden van RO Sans (woff2, woff, ttf of otf). Staat `bold` in de naam, dan wordt het vet. Staat `italic` in de naam, dan wordt het cursief.
-- het logo als `logo.svg` of `logo.png`.
+- het logo: een svg- of png-bestand met `logo` in de naam, bijvoorbeeld `header-logo.svg`.
+- Iconenfonts (met `icon` in de naam) slaat de app over.
+- Is er geen vette variant, dan maakt de iPad de tekst zelf vet. Met een bestand als `rijks-sans-bold.woff2` ziet dat er beter uit.
 
 Zonder deze map gebruikt de app Verdana en toont hij geen logo.
 

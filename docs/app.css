@@ -82,16 +82,17 @@ button:active { transform: scale(0.98); }
 
 .kop { padding-top: env(safe-area-inset-top); }
 
+/* Het lint hangt vanaf de bovenrand, zoals in de Rijkshuisstijl. */
 .logo-strook {
   display: flex;
   justify-content: center;
-  padding: 12px var(--rand) 8px;
+  padding: 0 var(--rand) 12px;
   background: var(--wit);
 }
 
 .logo-strook img {
   display: block;
-  height: 72px;
+  height: 88px;
 }
 
 .balk {
