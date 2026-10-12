@@ -22,6 +22,7 @@
     <symbol id="i-afspelen" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></symbol>
     <symbol id="i-pauze" viewBox="0 0 24 24"><rect x="6" y="5" width="4.5" height="14" rx="1"/><rect x="13.5" y="5" width="4.5" height="14" rx="1"/></symbol>
     <symbol id="i-pijl" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-koptelefoon" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="2.5" y="13" width="5" height="8" rx="2"/><rect x="16.5" y="13" width="5" height="8" rx="2"/></symbol>
   </svg>
 
   <header class="kop">
@@ -46,11 +47,14 @@
       <ul id="lijst-opnames" class="lijst"></ul>
 
       <div id="hint" class="hint" hidden>
-        <p>Kies links een ministerie.</p>
+        <svg class="hint-teken" aria-hidden="true" focusable="false"><use href="#i-koptelefoon"></use></svg>
+        <p class="hint-tekst">Kies links een ministerie.</p>
+        <p>Daarna ziet u hier de opnames.</p>
       </div>
 
       <div id="leeg" class="hint" hidden>
-        <p>Er staan nog geen opnames op deze iPad.</p>
+        <svg class="hint-teken" aria-hidden="true" focusable="false"><use href="#i-koptelefoon"></use></svg>
+        <p class="hint-tekst">Er staan nog geen opnames op deze iPad.</p>
         <button type="button" class="knop" id="knop-leeg-beheer">Opnames inlezen</button>
       </div>
     </section>
@@ -62,8 +66,8 @@
       <svg class="speler-teken afspelen" aria-hidden="true" focusable="false"><use href="#i-afspelen"></use></svg>
     </button>
     <div class="speler-midden">
+      <p class="speler-ministerie" id="speler-ministerie">Speler</p>
       <p class="speler-titel" id="speler-titel">Kies een opname</p>
-      <p class="speler-ministerie" id="speler-ministerie"></p>
       <div class="speler-tijdlijn">
         <time class="tijd" id="tijd-nu" datetime="PT0S">0:00</time>
         <div class="schuif" id="voortgang" role="slider" tabindex="-1" aria-label="Positie in de opname"

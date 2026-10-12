@@ -1,20 +1,23 @@
-/* Studio 1400 — Rijkshuisstijl, gemaakt voor iPad (aanraken, liggend en staand) */
+/* Studio 1400 — Rijkshuisstijl met robijnrood accent, voor iPad (liggend en staand) */
 
 :root {
   --lintblauw: #154273;
+  --robijnrood: #ca005d;
+  --robijnrood-donker: #a3004b;
+  --robijnrood-tint: #fae6ef;
   --hemelblauw: #007bc7;
-  --lichtblauw: #8fcae7;
-  --tint: #e5eff8;
+  --achtergrond: #edf1f6;
+  --tint: #e3eaf2;
   --wit: #fff;
   --zwart: #000;
-  --grijs-1: #f3f3f3;
-  --grijs-2: #e6e6e6;
-  --grijs-3: #ccc;
-  --grijs-7: #535353;
+  --grijs: #535353;
+  --lijn: #d9e0e8;
   --rood: #d52b1e;
-  --geel-licht: #fff4dc;
   --letter: "RO Sans", "RijksoverheidSansWebText", verdana, arial, sans-serif;
   --rand: 24px;
+  --rond: 16px;
+  --schaduw: 0 1px 2px rgb(21 66 115 / 8%), 0 8px 24px rgb(21 66 115 / 8%);
+  --snel: 150ms ease-out;
 
   color-scheme: light;
 }
@@ -23,23 +26,29 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html,
-body {
-  margin: 0;
-  height: 100%;
-  background: var(--wit);
+h1,
+h2,
+h3,
+p { margin: 0; }
+
+[hidden] { display: none !important; }
+
+:focus-visible {
+  outline: 3px solid var(--hemelblauw);
+  outline-offset: 2px;
 }
+
+html { height: 100%; }
 
 body {
   display: grid;
   grid-template-rows: auto 1fr auto;
-  height: 100vh;
   height: 100dvh;
+  margin: 0;
   overflow: hidden;
-  font-family: var(--letter);
-  font-size: 20px;
-  line-height: 1.4;
+  background: var(--achtergrond);
   color: var(--zwart);
+  font: 20px/1.4 var(--letter);
   overscroll-behavior: none;
 
   /* Kiosk: geen selectie of menu bij lang drukken. Safari op iPadOS kent alleen de -webkit-variant van user-select. */
@@ -50,17 +59,15 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-h1,
-h2,
-h3,
-p { margin: 0; }
-
 button,
-input,
 .knop {
   font: inherit;
+  cursor: pointer;
   touch-action: manipulation;
+  transition: background-color var(--snel), color var(--snel), transform var(--snel);
 }
+
+button:active { transform: scale(0.98); }
 
 .verborgen {
   position: absolute !important;
@@ -69,13 +76,6 @@ input,
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
-}
-
-[hidden] { display: none !important; }
-
-:focus-visible {
-  outline: 3px solid var(--hemelblauw);
-  outline-offset: 2px;
 }
 
 /* ---------- Kop ---------- */
@@ -92,32 +92,44 @@ input,
 .logo-strook img {
   display: block;
   height: 72px;
-  width: auto;
 }
 
 .balk {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 24px;
-  padding: 16px calc(var(--rand) + env(safe-area-inset-right)) 16px calc(var(--rand) + env(safe-area-inset-left));
+  padding: 18px calc(var(--rand) + env(safe-area-inset-right)) 20px calc(var(--rand) + env(safe-area-inset-left));
   background: var(--lintblauw);
   color: var(--wit);
 }
 
-.balk h1 {
-  font-size: 28px;
-  font-weight: 700;
+.balk::after {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--rand) + env(safe-area-inset-left));
+  width: 96px;
+  height: 5px;
+  background: var(--robijnrood);
+  content: "";
 }
 
-.balk .uitleg { font-size: 20px; }
+.balk h1 {
+  font-size: 30px;
+  letter-spacing: -0.01em;
+}
 
-/* ---------- Inhoud: twee kolommen ---------- */
+.uitleg { opacity: 0.9; }
+
+/* ---------- Twee kaarten naast elkaar ---------- */
 
 .inhoud {
   display: grid;
-  grid-template-columns: minmax(280px, 36%) 1fr;
+  grid-template-columns: minmax(300px, 36%) 1fr;
+  gap: var(--rand);
   min-height: 0;
+  padding: var(--rand) calc(var(--rand) + env(safe-area-inset-right)) var(--rand) calc(var(--rand) + env(safe-area-inset-left));
 }
 
 .ministeries,
@@ -125,37 +137,43 @@ input,
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  border-radius: var(--rond);
+  background: var(--wit);
+  box-shadow: var(--schaduw);
 }
 
-.ministeries {
-  background: var(--grijs-1);
-  border-right: 1px solid var(--grijs-3);
-  padding-left: env(safe-area-inset-left);
-}
+.inhoud:has(> .ministeries[hidden]) { grid-template-columns: 1fr; }
 
-.opnames { padding-right: env(safe-area-inset-right); }
+.kolomkop,
+.opnames-kop {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  background: var(--wit);
+}
 
 .kolomkop {
-  padding: 20px var(--rand) 12px;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--lintblauw);
+  padding: 20px 24px 8px;
+  color: var(--grijs);
+  font-size: 18px;
 }
 
 .opnames-kop {
-  padding: 20px var(--rand) 16px;
-  border-bottom: 2px solid var(--lintblauw);
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid var(--lijn);
 }
 
 .kolomkop-groot {
+  position: static;
   padding: 0;
-  font-size: 28px;
-  line-height: 1.25;
+  color: var(--lintblauw);
+  font-size: 32px;
+  line-height: 1.2;
 }
 
 .samenvatting {
-  margin-top: 4px;
-  color: var(--grijs-7);
+  margin-top: 6px;
+  color: var(--grijs);
 }
 
 .lijst {
@@ -164,95 +182,101 @@ input,
   list-style: none;
 }
 
-/* Ministerie-knoppen */
+#lijst-ministeries { padding: 4px 12px 16px; }
+
+/* Ministeries */
 
 .ministerie {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   width: 100%;
   min-height: 72px;
-  padding: 14px var(--rand);
+  margin-bottom: 4px;
+  padding: 14px 16px;
   border: 0;
-  border-bottom: 1px solid var(--grijs-3);
+  border-radius: 12px;
   background: transparent;
   color: var(--zwart);
   font-size: 22px;
+  font-weight: 700;
   line-height: 1.25;
   text-align: left;
-  cursor: pointer;
 }
 
-.ministerie:active { background: var(--grijs-2); }
+.ministerie:active { background: var(--tint); }
 
-.ministerie .naam {
+.ministerie .naam,
+.opname .naam {
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.ministerie .aantal {
-  min-width: 2.2em;
+.aantal {
+  min-width: 2.4em;
   padding: 2px 10px;
   border-radius: 999px;
-  background: var(--wit);
-  color: var(--grijs-7);
+  background: var(--tint);
+  color: var(--lintblauw);
   font-size: 18px;
   text-align: center;
 }
 
 .ministerie-pijl {
   flex: none;
-  width: 24px;
-  height: 24px;
-  color: var(--lintblauw);
+  width: 22px;
+  height: 22px;
+  color: var(--grijs);
 }
 
 .ministerie[aria-current="true"] {
-  background: var(--lintblauw);
+  background: var(--robijnrood);
   color: var(--wit);
+  box-shadow: 0 6px 16px rgb(202 0 93 / 25%);
 }
 
 .ministerie[aria-current="true"] .aantal {
-  background: rgb(255 255 255 / 20%);
+  background: rgb(255 255 255 / 22%);
   color: var(--wit);
 }
 
 .ministerie[aria-current="true"] .ministerie-pijl { color: var(--wit); }
 
-/* Opname-knoppen */
+/* Opnames */
 
 .opname {
   display: grid;
-  grid-template-columns: 56px 1fr auto;
+  grid-template-columns: 60px 1fr auto auto;
   align-items: center;
   gap: 20px;
   width: 100%;
-  min-height: 84px;
-  padding: 14px var(--rand);
+  min-height: 88px;
+  padding: 14px 28px;
   border: 0;
-  border-bottom: 1px solid var(--grijs-3);
+  border-bottom: 1px solid var(--lijn);
   background: var(--wit);
   color: var(--zwart);
   font-size: 22px;
   line-height: 1.3;
   text-align: left;
-  cursor: pointer;
 }
 
-.opname:active { background: var(--grijs-1); }
+.opname:active { background: var(--achtergrond); }
 
-.opname .icoon {
+.icoon {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
-  border: 2px solid var(--lintblauw);
+  width: 60px;
+  height: 60px;
+  border: 2px solid var(--robijnrood);
   border-radius: 50%;
-  color: var(--lintblauw);
+  color: var(--robijnrood);
+  transition: background-color var(--snel), color var(--snel);
 }
 
-.opname-teken {
+.opname-teken,
+.speler-teken {
   width: 26px;
   height: 26px;
   fill: currentcolor;
@@ -260,23 +284,53 @@ input,
 
 .opname-teken.afspelen { margin-left: 3px; }
 
-.opname .naam {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.opname .duur {
-  color: var(--grijs-7);
+.duur {
+  color: var(--grijs);
   font-variant-numeric: tabular-nums;
 }
 
-.opname[aria-current="true"] { background: var(--tint); }
+.opname[aria-current="true"] { background: var(--robijnrood-tint); }
 
-.opname[aria-current="true"] .naam { font-weight: 700; }
+.opname[aria-current="true"] .naam {
+  color: var(--robijnrood-donker);
+  font-weight: 700;
+}
 
 .opname[aria-current="true"] .icoon {
-  background: var(--lintblauw);
+  background: var(--robijnrood);
   color: var(--wit);
+}
+
+/* Geluidsgolf naast de opname die speelt */
+
+.golf {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 20px;
+  visibility: hidden;
+}
+
+.golf span {
+  width: 4px;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--robijnrood);
+  transform-origin: bottom;
+  animation: golf 900ms ease-in-out infinite alternate paused;
+}
+
+.golf span:nth-child(2) { animation-delay: -300ms; }
+
+.golf span:nth-child(3) { animation-delay: -600ms; }
+
+.is-spelend .golf { visibility: visible; }
+
+.is-spelend .golf span { animation-play-state: running; }
+
+@keyframes golf {
+  from { transform: scaleY(0.25); }
+  to { transform: scaleY(1); }
 }
 
 /* Lege toestanden */
@@ -284,11 +338,27 @@ input,
 .hint {
   display: grid;
   justify-items: center;
-  gap: 24px;
-  padding: 72px var(--rand);
-  color: var(--grijs-7);
-  font-size: 24px;
+  gap: 12px;
+  padding: 80px var(--rand);
+  color: var(--grijs);
   text-align: center;
+}
+
+.hint-teken {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 8px;
+  padding: 22px;
+  border-radius: 50%;
+  background: var(--tint);
+  color: var(--lintblauw);
+  fill: currentcolor;
+}
+
+.hint-tekst {
+  color: var(--lintblauw);
+  font-size: 26px;
+  font-weight: 700;
 }
 
 /* ---------- Speler ---------- */
@@ -298,7 +368,7 @@ input,
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 24px;
-  padding: 16px calc(var(--rand) + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(var(--rand) + env(safe-area-inset-left));
+  padding: 18px calc(var(--rand) + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(var(--rand) + env(safe-area-inset-left));
   background: var(--lintblauw);
   color: var(--wit);
 }
@@ -306,69 +376,68 @@ input,
 .speler-knop {
   display: grid;
   place-items: center;
-  width: 80px;
-  height: 80px;
+  width: 84px;
+  height: 84px;
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: var(--wit);
-  color: var(--lintblauw);
-  cursor: pointer;
+  background: var(--robijnrood);
+  color: var(--wit);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 30%);
 }
 
-.speler-teken {
-  width: 36px;
-  height: 36px;
-  fill: currentcolor;
-}
-
-.speler-teken.afspelen { margin-left: 4px; }
-
-.speler-knop:active { background: var(--lichtblauw); }
+.speler-knop:active { background: var(--robijnrood-donker); }
 
 .speler-knop:disabled {
-  opacity: 0.35;
+  background: rgb(255 255 255 / 15%);
+  box-shadow: none;
   cursor: default;
 }
 
 .speler-knop:focus-visible { outline-color: var(--wit); }
 
+.speler-teken {
+  width: 36px;
+  height: 36px;
+}
+
+.speler-teken.afspelen { margin-left: 4px; }
+
 .speler-midden { min-width: 0; }
 
+.speler-ministerie,
 .speler-titel {
   overflow: hidden;
-  font-size: 22px;
-  font-weight: 700;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .speler-ministerie {
-  min-height: 1.4em;
-  overflow: hidden;
-  font-size: 18px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  opacity: 0.85;
+  font-size: 17px;
+  opacity: 0.8;
+}
+
+.speler-titel {
+  font-size: 23px;
+  font-weight: 700;
 }
 
 .speler-tijdlijn {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 16px;
-  margin-top: 4px;
+  gap: 12px;
 }
 
 .tijd {
-  min-width: 3.2em;
-  font-size: 18px;
+  min-width: 3.4em;
+  font-size: 17px;
   font-variant-numeric: tabular-nums;
 }
 
 .tijd:last-child { text-align: right; }
 
-/* Schuifbalk: eigen schuif, zodat tikken én slepen werkt op iPad */
+/* Eigen schuif: tikken én slepen werkt op iPad */
 
 .schuif {
   --deel: 0;
@@ -381,28 +450,27 @@ input,
 
 .schuif-spoor {
   position: absolute;
-  top: 18px;
-  right: 16px;
-  left: 16px;
+  inset: 18px 16px auto;
   height: 8px;
   overflow: hidden;
   border-radius: 4px;
-  background: rgb(255 255 255 / 30%);
+  background: rgb(255 255 255 / 25%);
 }
 
 .schuif-vulling {
   width: calc(var(--deel) * 100%);
   height: 100%;
-  background: var(--wit);
+  background: var(--robijnrood);
 }
 
 .schuif-duim {
   position: absolute;
-  top: 6px;
+  top: 8px;
   left: calc(16px + (100% - 32px) * var(--deel));
-  width: 32px;
-  height: 32px;
-  margin-left: -16px;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  border: 4px solid var(--robijnrood);
   border-radius: 50%;
   background: var(--wit);
   box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
@@ -423,18 +491,17 @@ input,
   justify-content: center;
   min-height: 56px;
   padding: 0 28px;
-  border: 2px solid var(--lintblauw);
-  border-radius: 4px;
-  background: var(--lintblauw);
+  border: 2px solid var(--robijnrood);
+  border-radius: 10px;
+  background: var(--robijnrood);
   color: var(--wit);
   font-size: 20px;
   font-weight: 700;
-  cursor: pointer;
 }
 
 .knop:active {
-  border-color: var(--hemelblauw);
-  background: var(--hemelblauw);
+  background: var(--robijnrood-donker);
+  transform: scale(0.98);
 }
 
 label.knop:focus-within {
@@ -443,6 +510,7 @@ label.knop:focus-within {
 }
 
 .knop-tweede {
+  border-color: var(--lintblauw);
   background: var(--wit);
   color: var(--lintblauw);
 }
@@ -455,10 +523,7 @@ label.knop:focus-within {
   color: var(--rood);
 }
 
-.knop-gevaar:active {
-  border-color: var(--rood);
-  background: #fbe9e8;
-}
+.knop-gevaar:active { background: #fbe9e8; }
 
 .knop:disabled,
 .knop.is-uit {
@@ -483,35 +548,34 @@ label.knop:focus-within {
   width: min(680px, calc(100vw - 48px));
   max-height: calc(100dvh - 48px);
   padding: 32px;
-  border: 0;
-  border-top: 8px solid var(--lintblauw);
-  border-radius: 4px;
-  color: var(--zwart);
   overflow-y: auto;
+  border: 0;
+  border-top: 8px solid var(--robijnrood);
+  border-radius: var(--rond);
+  color: var(--zwart);
+  box-shadow: var(--schaduw);
+
   /* stylelint-disable-next-line property-no-vendor-prefix */
   -webkit-user-select: text;
   user-select: text;
 }
 
-.beheer::backdrop { background: rgb(0 0 0 / 55%); }
+.beheer::backdrop { background: rgb(21 66 115 / 55%); }
 
 .beheer h2 {
   margin-bottom: 16px;
-  font-size: 28px;
   color: var(--lintblauw);
+  font-size: 30px;
 }
 
-.beheer h3 {
-  margin-bottom: 8px;
-  font-size: 22px;
-}
+.beheer h3 { font-size: 22px; }
 
 .beheer-blok {
   display: grid;
   justify-items: start;
   gap: 12px;
   padding: 20px 0;
-  border-bottom: 1px solid var(--grijs-3);
+  border-bottom: 1px solid var(--lijn);
 }
 
 .inlezen {
@@ -523,22 +587,23 @@ label.knop:focus-within {
 .inlezen progress {
   width: 100%;
   height: 16px;
-  accent-color: var(--lintblauw);
+  accent-color: var(--robijnrood);
 }
 
-.regels { white-space: pre-line; }
+.regels,
+.melding { white-space: pre-line; }
 
 .melding {
   width: 100%;
   padding: 12px 16px;
   border-left: 6px solid var(--lintblauw);
+  border-radius: 6px;
   background: var(--tint);
-  white-space: pre-line;
 }
 
 .melding-let-op {
   border-left-color: #e17000;
-  background: var(--geel-licht);
+  background: #fff4dc;
 }
 
 .melding-fout {
@@ -546,44 +611,43 @@ label.knop:focus-within {
   background: #fbe9e8;
 }
 
-/* ---------- Staand (iPad rechtop) ---------- */
+/* ---------- Kleinere schermen ---------- */
 
 @media (width <= 900px) {
-  .inhoud { grid-template-columns: minmax(300px, 40%) 1fr; }
+  :root { --rand: 16px; }
 
-  .ministerie {
-    gap: 12px;
-    font-size: 20px;
-  }
+  .inhoud { grid-template-columns: minmax(280px, 40%) 1fr; }
+
+  .ministerie,
+  .opname { font-size: 20px; }
 
   .ministerie-pijl { display: none; }
 
   .opname {
-    gap: 16px;
-    font-size: 20px;
+    gap: 14px;
+    padding-inline: 20px;
   }
 }
 
-/* ---------- Smal scherm (gesplitst scherm) ---------- */
-
 @media (width <= 700px) {
-  :root { --rand: 16px; }
-
   .inhoud {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
   }
 
-  .ministeries {
-    max-height: 38vh;
-    border-right: 0;
-    border-bottom: 1px solid var(--grijs-3);
-  }
-
-  .balk .uitleg { font-size: 18px; }
+  .ministeries { max-height: 36vh; }
 
   .speler-knop {
     width: 64px;
     height: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
   }
 }

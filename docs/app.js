@@ -1,286 +1,155 @@
 'use strict';
 
 /*
- * Studio 1400 — opnames per ministerie kiezen en afspelen op een iPad.
- *
- * - De app-bestanden komen via de service worker uit de cache (offline).
- * - De opnames leest de beheerder in vanuit een map in de Bestanden-app.
- *   Ze staan daarna in IndexedDB op de iPad en gaan nooit online.
- * - Huisstijlbestanden (RO Sans, logo) kunnen in de submap _huisstijl staan.
- *
+ * Studio 1400: opnames per ministerie kiezen en afspelen op een iPad.
+ * De app-bestanden komen offline uit de service worker. De beheerder leest de opnames in
+ * vanuit een map; ze staan daarna in IndexedDB en gaan nooit online.
  * Verhoog VERSIE hier én in sw.js bij elke wijziging.
  */
 
-const VERSIE = '1.0.0';
-const RUST_NA_MS = 2 * 60 * 1000;      // terug naar beginscherm na 2 minuten zonder gebruik
-const LANG_DRUKKEN_MS = 3000;           // zo lang op de blauwe balk drukken opent Beheer
-const UPDATE_INTERVAL_MS = 6 * 60 * 60 * 1000;
-
-const AUDIO_EXT = /\.(mp3|m4a|aac|wav)$/i;
-const LETTER_EXT = /\.(woff2?|ttf|otf)$/i;
-const LOGO_NAAM = /^logo\.(svg|png|jpe?g|webp)$/i;
-const HUISSTIJL_MAP = /^_huisstijl$/i;
+const VERSIE = '1.1.0';
+const RUST_NA_MS = 2 * 60 * 1000;
+const LANG_DRUKKEN_MS = 3000;
+const UPDATE_ELKE_MS = 6 * 60 * 60 * 1000;
 const OVERIG = 'Overige opnames';
-
+const WINKELS = ['meta', 'opnames', 'audio', 'huisstijl'];
+const AUDIO = /\.(mp3|m4a|aac|wav)$/i;
+const LETTER = /\.(woff2?|ttf|otf)$/i;
+const LOGO = /^logo\.(svg|png|jpe?g|webp)$/i;
 const MIME = {
   mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', wav: 'audio/wav',
   woff2: 'font/woff2', woff: 'font/woff', ttf: 'font/ttf', otf: 'font/otf',
   svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp',
 };
-
 const vergelijk = new Intl.Collator('nl', { numeric: true, sensitivity: 'base' }).compare;
 
-const $ = (id) => document.getElementById(id);
-const el = {
-  balk: $('balk'),
-  logoStrook: $('logo-strook'),
-  lijstMinisteries: $('lijst-ministeries'),
-  opnamesKop: $('opnames-kop'),
-  kopOpnames: $('kop-opnames'),
-  samenvatting: $('samenvatting'),
-  lijstOpnames: $('lijst-opnames'),
-  hint: $('hint'),
-  leeg: $('leeg'),
-  knopLeegBeheer: $('knop-leeg-beheer'),
-  spelerKnop: $('speler-knop'),
-  spelerTitel: $('speler-titel'),
-  spelerMinisterie: $('speler-ministerie'),
-  voortgang: $('voortgang'),
-  tijdNu: $('tijd-nu'),
-  tijdTotaal: $('tijd-totaal'),
-  beheer: $('beheer'),
-  beheerWaarschuwing: $('beheer-waarschuwing'),
-  knopMap: $('knop-map'),
-  invoerMap: $('invoer-map'),
-  inlezen: $('inlezen'),
-  inlezenBalk: $('inlezen-balk'),
-  inlezenTekst: $('inlezen-tekst'),
-  beheerMelding: $('beheer-melding'),
-  opslagTekst: $('opslag-tekst'),
-  versie: $('versie'),
-  knopUpdate: $('knop-update'),
-  knopWissen: $('knop-wissen'),
-  knopSluiten: $('knop-sluiten'),
-  status: $('status'),
-  audio: $('audio'),
-};
+// Elk element met een id, bijvoorbeeld #speler-knop als el.spelerKnop.
+const el = {};
+for (const e of document.querySelectorAll('[id]')) el[e.id.replace(/-(\w)/g, (_, c) => c.toUpperCase())] = e;
 
-/* ---------- Toestand ---------- */
-
-let bibliotheek = new Map();   // sleutel -> { naam, opnames: [] }
-let gekozen = null;            // sleutel van het gekozen ministerie
-let huidige = null;            // opname die in de speler staat
-const blobUrls = new Map();    // opname-id -> object-URL
-let sleept = false;
-let bezig = false;             // inlezen loopt
+let bibliotheek = new Map(); // ministerie-sleutel -> { naam, opnames }
+let gekozen = null;
+let huidige = null;
+const blobUrls = new Map();
+let sleept = false, bezig = false, inRust = true, updateKlaar = false, handmatigeUpdate = false;
 let laatsteActie = Date.now();
-let inRust = true;
-let updateKlaar = false;
-let handmatigeUpdate = false;
-let wekslot = null;
-let logoUrl = null;
-let geladenLetters = [];
+let wekslot = null, logoUrl = null, geladenLetters = [];
 
 /* ---------- IndexedDB ---------- */
 
-let dbBelofte = null;
+let dbBelofte;
+const db = () => (dbBelofte ??= new Promise((ok, fout) => {
+  const req = indexedDB.open('studio1400', 1);
+  req.onupgradeneeded = () => WINKELS.forEach((w) => req.result.createObjectStore(w, w === 'meta' ? undefined : { keyPath: 'id' }));
+  req.onsuccess = () => ok(req.result);
+  req.onerror = () => fout(req.error);
+}));
 
-function db() {
-  if (!dbBelofte) {
-    dbBelofte = new Promise((resolve, reject) => {
-      const req = indexedDB.open('studio1400', 1);
-      req.onupgradeneeded = () => {
-        const d = req.result;
-        d.createObjectStore('meta');
-        d.createObjectStore('opnames', { keyPath: 'id' });
-        d.createObjectStore('audio', { keyPath: 'id' });
-        d.createObjectStore('huisstijl', { keyPath: 'id' });
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-  }
-  return dbBelofte;
-}
+const verzoek = (r) => new Promise((ok, fout) => {
+  r.onsuccess = () => ok(r.result);
+  r.onerror = () => fout(r.error);
+});
 
-function verzoek(req) {
-  return new Promise((resolve, reject) => {
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+// Eén transactie. Klaar pas als alles echt is opgeslagen.
+async function tx(winkels, modus, werk) {
+  const t = (await db()).transaction(winkels, modus);
+  const uitkomst = werk((w) => t.objectStore(w));
+  await new Promise((ok, fout) => {
+    t.oncomplete = ok;
+    t.onerror = t.onabort = (e) => fout(e.target.error || t.error || new Error('Opslaan afgebroken'));
   });
+  return uitkomst;
 }
 
-function afgerond(tx) {
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve();
-    tx.onerror = (e) => reject(e.target.error || tx.error);
-    tx.onabort = (e) => reject(e.target.error || tx.error || new Error('Opslaan afgebroken'));
-  });
+const haal = (w, k) => tx(w, 'readonly', (st) => verzoek(st(w).get(k)));
+const alles = (w) => tx(w, 'readonly', (st) => verzoek(st(w).getAll()));
+const zetMeta = (k, v) => tx('meta', 'readwrite', (st) => { st('meta').put(v, k); });
+const bewaar = (records) => tx([...new Set(records.map(([w]) => w))], 'readwrite', (st) => records.forEach(([w, r]) => st(w).put(r)));
+
+async function verwijder(winkels, test) {
+  const ids = (await alles(winkels[0])).filter(test).map((r) => r.id);
+  if (ids.length) await tx(winkels, 'readwrite', (st) => winkels.forEach((w) => ids.forEach((id) => st(w).delete(id))));
 }
 
-async function haal(winkel, sleutel) {
-  const tx = (await db()).transaction(winkel);
-  return verzoek(tx.objectStore(winkel).get(sleutel));
-}
-
-async function alles(winkel) {
-  const tx = (await db()).transaction(winkel);
-  return verzoek(tx.objectStore(winkel).getAll());
-}
-
-async function zetMeta(sleutel, waarde) {
-  const tx = (await db()).transaction('meta', 'readwrite');
-  tx.objectStore('meta').put(waarde, sleutel);
-  return afgerond(tx);
-}
-
-async function bewaar(winkels, records) {
-  const tx = (await db()).transaction(winkels, 'readwrite');
-  for (const [winkel, record] of records) tx.objectStore(winkel).put(record);
-  return afgerond(tx);
-}
-
-async function verwijderIds(winkels, ids) {
-  if (!ids.length) return;
-  const tx = (await db()).transaction(winkels, 'readwrite');
-  for (const winkel of winkels) {
-    const st = tx.objectStore(winkel);
-    for (const id of ids) st.delete(id);
-  }
-  return afgerond(tx);
-}
-
-async function wisAlles() {
-  const winkels = ['meta', 'opnames', 'audio', 'huisstijl'];
-  const tx = (await db()).transaction(winkels, 'readwrite');
-  for (const w of winkels) tx.objectStore(w).clear();
-  return afgerond(tx);
-}
-
-/* Verwijder resten van oude of afgebroken inleesrondes. */
+// Resten van oude of afgebroken inleesrondes weghalen.
 async function ruimOp() {
   const batch = await haal('meta', 'batch');
-  const huisBatch = await haal('meta', 'huisstijlBatch');
-  const oud = (await alles('opnames')).filter((o) => o.batch !== batch).map((o) => o.id);
-  await verwijderIds(['opnames', 'audio'], oud);
-  const oudHuis = (await alles('huisstijl')).filter((h) => h.batch !== huisBatch).map((h) => h.id);
-  await verwijderIds(['huisstijl'], oudHuis);
+  const huis = await haal('meta', 'huisstijlBatch');
+  await verwijder(['opnames', 'audio'], (o) => o.batch !== batch);
+  await verwijder(['huisstijl'], (h) => h.batch !== huis);
 }
 
-/* ---------- Duur bepalen zonder af te spelen ---------- */
-/* iPadOS laadt geen metadata van audio zonder tik. Daarom lezen we de duur uit het bestand zelf. */
-
-const MP3_KBPS = {
-  mpeg1: [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320],
-  mpeg2: [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160],
-};
-const MP3_HZ = { 3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000] };
-
-function tekstOp(b, p, n) {
-  let s = '';
-  for (let i = 0; i < n && p + i < b.length; i++) s += String.fromCharCode(b[p + i]);
-  return s;
+async function verwijderBatch(batch) {
+  await verwijder(['opnames', 'audio'], (o) => o.batch === batch);
+  await verwijder(['huisstijl'], (h) => h.batch === batch);
 }
 
-function leesMp3Kop(b, p) {
-  if (p + 4 > b.length || b[p] !== 0xff || (b[p + 1] & 0xe0) !== 0xe0) return null;
-  const versie = (b[p + 1] >> 3) & 3;   // 3 = MPEG-1, 2 = MPEG-2, 0 = MPEG-2.5
-  const laag = (b[p + 1] >> 1) & 3;     // 1 = Layer III
-  if (versie === 1 || laag !== 1) return null;
-  const bitIndex = b[p + 2] >> 4;
-  const hzIndex = (b[p + 2] >> 2) & 3;
-  if (bitIndex === 0 || bitIndex === 15 || hzIndex === 3) return null;
-  const mpeg1 = versie === 3;
-  const kbps = (mpeg1 ? MP3_KBPS.mpeg1 : MP3_KBPS.mpeg2)[bitIndex];
-  const hz = MP3_HZ[versie][hzIndex];
-  const samples = mpeg1 ? 1152 : 576;
-  const lengte = Math.floor((samples / 8) * kbps * 1000 / hz) + ((b[p + 2] >> 1) & 1);
-  return { mpeg1, kbps, hz, samples, lengte, mono: (b[p + 3] >> 6) === 3 };
+/* ---------- Duur uit het bestand: iPadOS laadt geen audiometadata zonder tik ---------- */
+
+const KBPS = [[0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320], [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160]];
+const HZ = { 3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000] };
+const ascii = (b, p, n) => (p < 0 ? '' : String.fromCharCode(...b.subarray(p, p + n)));
+
+function mp3Kop(b, p) {
+  if (b[p] !== 0xff || (b[p + 1] & 0xe0) !== 0xe0) return null;
+  const versie = (b[p + 1] >> 3) & 3, laag = (b[p + 1] >> 1) & 3, br = b[p + 2] >> 4, hz = (b[p + 2] >> 2) & 3;
+  if (versie === 1 || laag !== 1 || br === 0 || br === 15 || hz === 3) return null;
+  const mpeg1 = versie === 3, samples = mpeg1 ? 1152 : 576, kbps = KBPS[mpeg1 ? 0 : 1][br], freq = HZ[versie][hz];
+  return { mpeg1, kbps, freq, samples, mono: (b[p + 3] >> 6) === 3, lengte: Math.floor((samples / 8) * kbps * 1000 / freq) + ((b[p + 2] >> 1) & 1) };
 }
 
-function duurMp3(b) {
-  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
-  let start = 0;
-  while (start + 10 <= b.length && tekstOp(b, start, 3) === 'ID3') {
-    const grootte = ((b[start + 6] & 0x7f) << 21) | ((b[start + 7] & 0x7f) << 14)
-      | ((b[start + 8] & 0x7f) << 7) | (b[start + 9] & 0x7f);
-    start += 10 + grootte + ((b[start + 5] & 0x10) ? 10 : 0);
+function duurMp3(b, dv) {
+  let p = 0;
+  while (ascii(b, p, 3) === 'ID3') {
+    p += 10 + (((b[p + 6] & 0x7f) << 21) | ((b[p + 7] & 0x7f) << 14) | ((b[p + 8] & 0x7f) << 7) | (b[p + 9] & 0x7f)) + (b[p + 5] & 0x10 ? 10 : 0);
   }
-  const grens = Math.min(b.length - 4, start + 512 * 1024);
-  for (let p = start; p < grens; p++) {
-    const kop = leesMp3Kop(b, p);
-    if (!kop) continue;
-    const volgende = p + kop.lengte;
-    if (volgende + 4 <= b.length && !leesMp3Kop(b, volgende)) continue;
-
-    const xing = p + 4 + (kop.mpeg1 ? (kop.mono ? 17 : 32) : (kop.mono ? 9 : 17));
-    const tag = tekstOp(b, xing, 4);
-    if ((tag === 'Xing' || tag === 'Info') && xing + 12 <= b.length && (dv.getUint32(xing + 4) & 1)) {
-      const frames = dv.getUint32(xing + 8);
-      if (frames) return frames * kop.samples / kop.hz;
-    }
-    const vbri = p + 36;
-    if (tekstOp(b, vbri, 4) === 'VBRI' && vbri + 18 <= b.length) {
-      const frames = dv.getUint32(vbri + 14);
-      if (frames) return frames * kop.samples / kop.hz;
-    }
-    let eind = b.length;
-    if (eind >= 128 && tekstOp(b, eind - 128, 3) === 'TAG') eind -= 128;
-    return (eind - p) * 8 / (kop.kbps * 1000);
+  for (const grens = Math.min(b.length - 4, p + 512 * 1024); p < grens; p++) {
+    const k = mp3Kop(b, p);
+    if (!k || (p + k.lengte + 4 <= b.length && !mp3Kop(b, p + k.lengte))) continue;
+    const x = p + 4 + (k.mpeg1 ? (k.mono ? 17 : 32) : (k.mono ? 9 : 17));
+    if (/^(Xing|Info)$/.test(ascii(b, x, 4)) && dv.getUint32(x + 4) & 1) return (dv.getUint32(x + 8) * k.samples) / k.freq || null;
+    if (ascii(b, p + 36, 4) === 'VBRI') return (dv.getUint32(p + 50) * k.samples) / k.freq || null;
+    const eind = b.length - (ascii(b, b.length - 128, 3) === 'TAG' ? 128 : 0);
+    return ((eind - p) * 8) / (k.kbps * 1000);
   }
   return null;
 }
 
-function duurMp4(b) {
-  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+function duurMp4(b, dv) {
   const zoek = (van, tot, soort) => {
-    let p = van;
-    while (p + 8 <= tot) {
-      let grootte = dv.getUint32(p);
-      let kop = 8;
-      if (grootte === 1 && p + 16 <= tot) { grootte = Number(dv.getBigUint64(p + 8)); kop = 16; }
+    for (let p = van; p + 8 <= tot;) {
+      let grootte = dv.getUint32(p), kop = 8;
+      if (grootte === 1) [grootte, kop] = [Number(dv.getBigUint64(p + 8)), 16];
       else if (grootte === 0) grootte = tot - p;
       if (grootte < kop) return null;
-      if (tekstOp(b, p + 4, 4) === soort) return { van: p + kop, tot: Math.min(p + grootte, tot) };
+      if (ascii(b, p + 4, 4) === soort) return [p + kop, Math.min(p + grootte, tot)];
       p += grootte;
     }
     return null;
   };
   const moov = zoek(0, b.length, 'moov');
-  const mvhd = moov && zoek(moov.van, moov.tot, 'mvhd');
-  if (!mvhd) return null;
-  const v1 = b[mvhd.van] === 1;
-  const schaal = dv.getUint32(mvhd.van + (v1 ? 20 : 12));
-  const duur = v1 ? Number(dv.getBigUint64(mvhd.van + 24)) : dv.getUint32(mvhd.van + 16);
-  return schaal ? duur / schaal : null;
+  const m = moov && zoek(...moov, 'mvhd');
+  if (!m) return null;
+  const v1 = b[m[0]] === 1, schaal = dv.getUint32(m[0] + (v1 ? 20 : 12));
+  return schaal ? (v1 ? Number(dv.getBigUint64(m[0] + 24)) : dv.getUint32(m[0] + 16)) / schaal : null;
 }
 
-function duurWav(b) {
-  if (tekstOp(b, 0, 4) !== 'RIFF' || tekstOp(b, 8, 4) !== 'WAVE') return null;
-  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
-  let p = 12;
-  let bytesPerSeconde = 0;
-  while (p + 8 <= b.length) {
-    const id = tekstOp(b, p, 4);
-    const grootte = dv.getUint32(p + 4, true);
-    if (id === 'fmt ') bytesPerSeconde = dv.getUint32(p + 16, true);
-    if (id === 'data') {
-      const data = Math.min(grootte, b.length - p - 8);
-      return bytesPerSeconde ? data / bytesPerSeconde : null;
-    }
+function duurWav(b, dv) {
+  if (ascii(b, 0, 4) !== 'RIFF' || ascii(b, 8, 4) !== 'WAVE') return null;
+  let perSeconde = 0;
+  for (let p = 12; p + 8 <= b.length;) {
+    const id = ascii(b, p, 4), grootte = dv.getUint32(p + 4, true);
+    if (id === 'fmt ') perSeconde = dv.getUint32(p + 16, true);
+    if (id === 'data') return perSeconde ? Math.min(grootte, b.length - p - 8) / perSeconde : null;
     p += 8 + grootte + (grootte & 1);
   }
   return null;
 }
 
 function duurUitBuffer(buffer, naam) {
-  const b = new Uint8Array(buffer);
-  const ext = extensie(naam);
+  const b = new Uint8Array(buffer), dv = new DataView(buffer), ext = extensie(naam);
   try {
-    let d = null;
-    if (ext === 'wav') d = duurWav(b);
-    else if (ext === 'm4a') d = duurMp4(b);
-    else d = duurMp3(b) ?? duurMp4(b);
+    const d = ext === 'wav' ? duurWav(b, dv) : ext === 'm4a' ? duurMp4(b, dv) : (duurMp3(b, dv) ?? duurMp4(b, dv));
     return Number.isFinite(d) && d > 0 ? d : null;
   } catch {
     return null;
@@ -289,90 +158,76 @@ function duurUitBuffer(buffer, naam) {
 
 /* ---------- Hulpjes ---------- */
 
-function extensie(naam) {
-  const m = /\.([a-z0-9]+)$/i.exec(naam);
-  return m ? m[1].toLowerCase() : '';
-}
-
-function mimeVan(naam, type) {
-  return MIME[extensie(naam)] || type || 'application/octet-stream';
-}
+const extensie = (naam) => (/\.([a-z0-9]+)$/i.exec(naam)?.[1] || '').toLowerCase();
+const meervoud = (n, een, veel) => `${n} ${n === 1 ? een : veel}`;
 
 /*
- * Een volgnummer vooraan bepaalt de volgorde, maar tonen we niet.
- * "01 - Persconferentie_ministerraad.mp3" -> "Persconferentie ministerraad"
- * "10 Jaaroverzicht" verliest zijn nummer alleen als een buur met "0" begint (01, 02 …),
- * zodat "100 dagen kabinet" of "2024 jaarbericht" heel blijft.
+ * Een volgnummer vooraan bepaalt de volgorde, maar tonen we niet: "01 - Pers_conferentie.mp3" wordt "Pers conferentie".
+ * "10 Titel" verliest zijn nummer alleen als een buur met 0 begint, zodat "100 dagen" heel blijft.
  */
-const NUMMER_MET_TEKEN = /^\s*\d{1,3}\s*[-._)]\s*/;
-const NUMMER_LOS = /^\s*\d{1,3}\s+/;
-const NUMMER_MET_NUL = /^\s*0\d{0,2}[\s._)-]/;
-
-function heeftNummering(namen) {
-  return namen.some((n) => NUMMER_MET_NUL.test(n));
-}
+const NR_TEKEN = /^\s*\d{1,3}\s*[-._)]\s*/, NR_LOS = /^\s*\d{1,3}\s+/, NR_NUL = /^\s*0\d{0,2}[\s._)-]/;
+const heeftNummering = (namen) => namen.some((n) => NR_NUL.test(n));
 
 function schoneNaam(naam, isBestand, nummering = false) {
   let s = isBestand ? naam.replace(/\.[^.]+$/, '') : naam;
-  if (NUMMER_MET_TEKEN.test(s)) s = s.replace(NUMMER_MET_TEKEN, '');
-  else if (nummering || NUMMER_MET_NUL.test(s)) s = s.replace(NUMMER_LOS, '');
-  s = s.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim();
-  return s || naam;
+  if (NR_TEKEN.test(s)) s = s.replace(NR_TEKEN, '');
+  else if (nummering || NR_NUL.test(s)) s = s.replace(NR_LOS, '');
+  return s.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim() || naam;
+}
+
+function delen(s) {
+  s = Math.floor(Number.isFinite(s) && s > 0 ? s : 0);
+  return [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60];
 }
 
 function tijd(s) {
   if (!Number.isFinite(s) || s < 0) return '';
-  s = Math.floor(s);
-  const u = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = String(s % 60).padStart(2, '0');
-  return u ? `${u}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+  const [u, m, sec] = delen(s), ss = String(sec).padStart(2, '0');
+  return u ? `${u}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
 }
 
-/* Machineleesbare duur voor <time datetime>, bijvoorbeeld PT1M5S. */
+// Machineleesbare duur voor <time datetime>, bijvoorbeeld PT1M5S.
 function duurAttribuut(s) {
-  s = Number.isFinite(s) && s > 0 ? Math.floor(s) : 0;
-  const u = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
+  const [u, m, sec] = delen(s);
   return `PT${u ? `${u}H` : ''}${m ? `${m}M` : ''}${sec || (!u && !m) ? `${sec}S` : ''}`;
 }
 
 function minutenTekst(s) {
-  const min = Math.round(s / 60);
+  const min = Math.round(s / 60), u = Math.floor(min / 60), rest = min % 60;
   if (min < 1) return 'minder dan een minuut';
-  if (min < 90) return min === 1 ? '1 minuut' : `${min} minuten`;
-  const u = Math.floor(min / 60);
-  const rest = min % 60;
+  if (min < 90) return meervoud(min, 'minuut', 'minuten');
   return rest ? `${u} uur en ${rest} minuten` : `${u} uur`;
 }
 
-function grootteTekst(bytes) {
-  const nl = (n) => n.toLocaleString('nl-NL', { maximumFractionDigits: 1 });
-  if (bytes >= 1e9) return `${nl(bytes / 1e9)} GB`;
-  return `${nl(Math.max(bytes, 0) / 1e6)} MB`;
-}
+const grootteTekst = (b) => (b >= 1e9 ? `${(b / 1e9).toLocaleString('nl-NL', { maximumFractionDigits: 1 })} GB`
+  : `${(Math.max(b, 0) / 1e6).toLocaleString('nl-NL', { maximumFractionDigits: 1 })} MB`);
 
-function opnamesTekst(n) {
-  return n === 1 ? '1 opname' : `${n} opnames`;
-}
-
-function maak(tag, klasse, tekst) {
+function maak(tag, klasse, inhoud) {
   const e = document.createElement(tag);
   if (klasse) e.className = klasse;
-  if (tekst !== undefined && tekst !== null) e.textContent = tekst;
+  if (inhoud !== undefined) e.textContent = inhoud;
   return e;
 }
 
+function nieuweKnop(klasse) {
+  const k = maak('button', klasse);
+  k.type = 'button';
+  return k;
+}
+
+function inLijst(inhoud) {
+  const li = maak('li');
+  li.append(inhoud);
+  return li;
+}
+
 function icoon(naam, klasse) {
-  const ns = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(ns, 'svg');
+  const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg');
   svg.setAttribute('class', klasse);
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('focusable', 'false');
-  const use = document.createElementNS(ns, 'use');
-  use.setAttribute('href', `#i-${naam}`);
-  svg.append(use);
+  svg.append(document.createElementNS(ns, 'use'));
+  zetIcoon(svg, naam);
   return svg;
 }
 
@@ -381,123 +236,91 @@ function zetIcoon(svg, naam) {
   svg.classList.toggle('afspelen', naam === 'afspelen');
 }
 
+const zetHuidig = (e, aan) => (aan ? e.setAttribute('aria-current', 'true') : e.removeAttribute('aria-current'));
+
 function meldStatus(tekst) {
   el.status.textContent = '';
   requestAnimationFrame(() => { el.status.textContent = tekst; });
 }
 
-function isBeginschermApp() {
-  return window.matchMedia('(display-mode: standalone)').matches
-    || window.matchMedia('(display-mode: fullscreen)').matches
-    || navigator.standalone === true;
-}
+const isBeginschermApp = () => ['standalone', 'fullscreen'].some((m) => matchMedia(`(display-mode: ${m})`).matches) || navigator.standalone === true;
 
-/* ---------- Bibliotheek laden en tonen ---------- */
+/* ---------- Bibliotheek tonen ---------- */
 
 async function laadBibliotheek() {
   const batch = await haal('meta', 'batch');
-  const opnames = batch ? (await alles('opnames')).filter((o) => o.batch === batch) : [];
   const groepen = new Map();
-  for (const o of opnames) {
+  for (const o of batch ? (await alles('opnames')).filter((r) => r.batch === batch) : []) {
     if (!groepen.has(o.ministerieSleutel)) groepen.set(o.ministerieSleutel, { naam: o.ministerie, opnames: [] });
     groepen.get(o.ministerieSleutel).opnames.push(o);
   }
-  for (const g of groepen.values()) g.opnames.sort((a, b) => vergelijk(a.sleutel, b.sleutel));
-  const sleutels = [...groepen.keys()].sort((a, b) => {
-    if (a === OVERIG) return 1;
-    if (b === OVERIG) return -1;
-    return vergelijk(a, b);
-  });
-  bibliotheek = new Map(sleutels.map((k) => [k, groepen.get(k)]));
-  if (gekozen && !bibliotheek.has(gekozen)) gekozen = null;
+  groepen.forEach((g) => g.opnames.sort((a, b) => vergelijk(a.sleutel, b.sleutel)));
+  bibliotheek = new Map([...groepen].sort(([a], [b]) => (a === OVERIG) - (b === OVERIG) || vergelijk(a, b)));
+  if (!bibliotheek.has(gekozen)) gekozen = null;
 }
 
 function toonMinisteries() {
-  const items = [];
-  for (const [sleutel, groep] of bibliotheek) {
-    const knop = maak('button', 'ministerie');
-    knop.type = 'button';
-    knop.dataset.sleutel = sleutel;
-    if (sleutel === gekozen) knop.setAttribute('aria-current', 'true');
-    const aantal = maak('span', 'aantal', String(groep.opnames.length));
-    aantal.append(maak('span', 'verborgen', groep.opnames.length === 1 ? ' opname' : ' opnames'));
-    knop.append(maak('span', 'naam', groep.naam), aantal, icoon('pijl', 'ministerie-pijl'));
-    knop.addEventListener('click', () => kiesMinisterie(sleutel));
-    const li = maak('li');
-    li.append(knop);
-    items.push(li);
-  }
-  el.lijstMinisteries.replaceChildren(...items);
+  el.lijstMinisteries.replaceChildren(...[...bibliotheek].map(([sleutel, g]) => {
+    const k = nieuweKnop('ministerie'), aantal = maak('span', 'aantal', String(g.opnames.length));
+    k.dataset.sleutel = sleutel;
+    zetHuidig(k, sleutel === gekozen);
+    aantal.append(maak('span', 'verborgen', g.opnames.length === 1 ? ' opname' : ' opnames'));
+    k.append(maak('span', 'naam', g.naam), aantal, icoon('pijl', 'ministerie-pijl'));
+    k.addEventListener('click', () => kiesMinisterie(sleutel));
+    return inLijst(k);
+  }));
 }
 
 function kiesMinisterie(sleutel) {
   gekozen = sleutel;
-  for (const knop of el.lijstMinisteries.querySelectorAll('.ministerie')) {
-    if (knop.dataset.sleutel === sleutel) knop.setAttribute('aria-current', 'true');
-    else knop.removeAttribute('aria-current');
-  }
+  for (const k of el.lijstMinisteries.querySelectorAll('.ministerie')) zetHuidig(k, k.dataset.sleutel === sleutel);
   toonOpnames();
   el.lijstOpnames.parentElement.scrollTop = 0;
   bereidAfspelenVoor(bibliotheek.get(sleutel));
 }
 
 function toonOpnames() {
-  const leeg = bibliotheek.size === 0;
-  const groep = gekozen ? bibliotheek.get(gekozen) : null;
-  el.leeg.hidden = !leeg;
-  el.hint.hidden = leeg || Boolean(groep);
-  el.opnamesKop.hidden = !groep;
+  const g = bibliotheek.get(gekozen);
+  el.leeg.hidden = bibliotheek.size > 0;
+  el.lijstMinisteries.parentElement.hidden = !el.leeg.hidden;
+  el.hint.hidden = !el.leeg.hidden || Boolean(g);
+  el.opnamesKop.hidden = !g;
+  el.kopOpnames.textContent = g ? g.naam : 'Opnames';
+  if (!g) return el.lijstOpnames.replaceChildren();
 
-  if (!groep) {
-    el.kopOpnames.textContent = 'Opnames';
-    el.lijstOpnames.replaceChildren();
-    return;
-  }
-
-  el.kopOpnames.textContent = groep.naam;
-  const duren = groep.opnames.map((o) => o.duur);
-  const n = groep.opnames.length;
-  el.samenvatting.textContent = duren.every((d) => d > 0)
-    ? `${opnamesTekst(n)}, samen ${minutenTekst(duren.reduce((a, b) => a + b, 0))}`
-    : opnamesTekst(n);
-
-  const items = groep.opnames.map((o) => {
-    const knop = maak('button', 'opname');
-    knop.type = 'button';
-    knop.dataset.id = o.id;
-    const rondje = maak('span', 'icoon');
-    rondje.append(icoon('afspelen', 'opname-teken afspelen'));
-    const duur = maak('time', 'duur', tijd(o.duur));
+  const n = meervoud(g.opnames.length, 'opname', 'opnames');
+  el.samenvatting.textContent = g.opnames.every((o) => o.duur > 0)
+    ? `${n}, samen ${minutenTekst(g.opnames.reduce((som, o) => som + o.duur, 0))}` : n;
+  el.lijstOpnames.replaceChildren(...g.opnames.map((o) => {
+    const k = nieuweKnop('opname'), rondje = maak('span', 'icoon'), golf = maak('span', 'golf'), duur = maak('time', 'duur', tijd(o.duur));
+    k.dataset.id = o.id;
+    rondje.append(icoon('afspelen', 'opname-teken'));
+    golf.setAttribute('aria-hidden', 'true');
+    golf.append(maak('span'), maak('span'), maak('span'));
     duur.dateTime = duurAttribuut(o.duur);
-    knop.append(rondje, maak('span', 'naam', o.titel), duur);
-    knop.addEventListener('click', () => speelOpname(o));
-    const li = maak('li');
-    li.append(knop);
-    return li;
-  });
-  el.lijstOpnames.replaceChildren(...items);
+    k.append(rondje, maak('span', 'naam', o.titel), golf, duur);
+    k.addEventListener('click', () => speelOpname(o));
+    return inLijst(k);
+  }));
   markeerSpelend();
 }
 
 function markeerSpelend() {
-  const speelt = huidige && !el.audio.paused;
-  for (const knop of el.lijstOpnames.querySelectorAll('.opname')) {
-    const isHuidig = Boolean(huidige) && knop.dataset.id === huidige.id;
-    if (isHuidig) knop.setAttribute('aria-current', 'true');
-    else knop.removeAttribute('aria-current');
-    zetIcoon(knop.querySelector('svg'), isHuidig && speelt ? 'pauze' : 'afspelen');
+  const speelt = Boolean(huidige) && !el.audio.paused;
+  for (const k of el.lijstOpnames.querySelectorAll('.opname')) {
+    const isHuidig = k.dataset.id === huidige?.id;
+    zetHuidig(k, isHuidig);
+    k.classList.toggle('is-spelend', isHuidig && speelt);
+    zetIcoon(k.querySelector('svg'), isHuidig && speelt ? 'pauze' : 'afspelen');
   }
 }
 
 /* ---------- Afspelen ---------- */
 
-/*
- * iPadOS speelt alleen af als play() direct in de tik wordt aangeroepen.
- * Daarom maken we de object-URL's al klaar zodra iemand een ministerie kiest.
- */
-async function bereidAfspelenVoor(groep) {
-  if (!groep) return;
-  const nodig = new Set(groep.opnames.map((o) => o.id));
+// play() moet direct in de tik. Daarom staan de object-URL's al klaar als iemand een ministerie kiest.
+async function bereidAfspelenVoor(g) {
+  if (!g) return;
+  const nodig = new Set(g.opnames.map((o) => o.id));
   for (const [id, url] of blobUrls) {
     if (!nodig.has(id) && id !== huidige?.id) {
       URL.revokeObjectURL(url);
@@ -507,65 +330,44 @@ async function bereidAfspelenVoor(groep) {
   const ontbrekend = [...nodig].filter((id) => !blobUrls.has(id));
   if (!ontbrekend.length) return;
   try {
-    const tx = (await db()).transaction('audio');
-    const st = tx.objectStore('audio');
-    const records = await Promise.all(ontbrekend.map((id) => verzoek(st.get(id))));
-    for (const r of records) {
-      if (r && !blobUrls.has(r.id)) blobUrls.set(r.id, URL.createObjectURL(r.blob));
-    }
+    const records = await tx('audio', 'readonly', (st) => Promise.all(ontbrekend.map((id) => verzoek(st('audio').get(id)))));
+    for (const r of records) if (r && !blobUrls.has(r.id)) blobUrls.set(r.id, URL.createObjectURL(r.blob));
   } catch (e) {
     console.error('Voorbereiden mislukt', e);
   }
 }
 
-function speelOpname(opname) {
-  if (huidige && huidige.id === opname.id) {
-    wissel();
-    return;
-  }
-  const url = blobUrls.get(opname.id);
-  if (url) {
-    laadInSpeler(opname, url);
-    speel();
-    return;
+function speelOpname(o) {
+  if (huidige?.id === o.id) return wissel();
+  if (blobUrls.has(o.id)) {
+    laadInSpeler(o, blobUrls.get(o.id));
+    return speel();
   }
   // Terugval: ontgrendel de speler binnen de tik en laad daarna.
   el.audio.removeAttribute('src');
   el.audio.load();
   el.audio.play().catch(() => {});
-  haal('audio', opname.id).then((r) => {
-    if (!r) {
-      meldStatus('Deze opname is niet gevonden. Lees de map opnieuw in.');
-      return;
-    }
-    const nieuw = URL.createObjectURL(r.blob);
-    blobUrls.set(opname.id, nieuw);
-    laadInSpeler(opname, nieuw);
+  haal('audio', o.id).then((r) => {
+    if (!r) return meldStatus('Deze opname is niet gevonden. Lees de map opnieuw in.');
+    blobUrls.set(o.id, URL.createObjectURL(r.blob));
+    laadInSpeler(o, blobUrls.get(o.id));
     speel();
-  }).catch((e) => console.error(e));
+  }).catch(console.error);
 }
 
-function laadInSpeler(opname, url) {
-  huidige = opname;
+function laadInSpeler(o, url) {
+  huidige = o;
   el.audio.src = url;
-  zetPositie(0, opname.duur || 0);
+  zetPositie(0, o.duur || 0);
   if ('mediaSession' in navigator && 'MediaMetadata' in window) {
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: opname.titel,
-      artist: opname.ministerie,
-      album: 'Studio 1400',
-    });
+    navigator.mediaSession.metadata = new MediaMetadata({ title: o.titel, artist: o.ministerie, album: 'Studio 1400' });
   }
   toonSpeler();
 }
 
-async function speel() {
-  try {
-    await el.audio.play();
-  } catch (e) {
-    if (e.name !== 'AbortError') meldStatus('Afspelen lukt niet. Tik nog een keer op de opname.');
-  }
-}
+const speel = () => el.audio.play().catch((e) => {
+  if (e.name !== 'AbortError') meldStatus('Afspelen lukt niet. Tik nog een keer op de opname.');
+});
 
 function wissel() {
   if (!huidige) return;
@@ -573,74 +375,60 @@ function wissel() {
   else el.audio.pause();
 }
 
-function duurNu() {
-  const d = el.audio.duration;
-  if (Number.isFinite(d) && d > 0) return d;
-  return huidige?.duur || 0;
-}
+const duurNu = () => (Number.isFinite(el.audio.duration) && el.audio.duration > 0 ? el.audio.duration : huidige?.duur || 0);
 
 function toonSpeler() {
-  const speelt = huidige && !el.audio.paused;
+  const speelt = Boolean(huidige) && !el.audio.paused;
   el.spelerKnop.disabled = !huidige;
   el.spelerKnop.setAttribute('aria-label', speelt ? 'Pauzeren' : 'Afspelen');
   zetIcoon(el.spelerKnop.querySelector('svg'), speelt ? 'pauze' : 'afspelen');
   el.spelerTitel.textContent = huidige ? huidige.titel : 'Kies een opname';
-  el.spelerMinisterie.textContent = huidige ? huidige.ministerie : '';
+  el.spelerMinisterie.textContent = huidige ? huidige.ministerie : 'Speler';
   el.voortgang.setAttribute('aria-disabled', String(!huidige));
   el.voortgang.tabIndex = huidige ? 0 : -1;
   markeerSpelend();
 }
 
-function zetPositie(seconden, totaal) {
-  const deel = totaal > 0 ? Math.min(Math.max(seconden / totaal, 0), 1) : 0;
-  el.voortgang.style.setProperty('--deel', String(deel));
-  el.voortgang.setAttribute('aria-valuemax', String(Math.round(totaal)));
-  el.voortgang.setAttribute('aria-valuenow', String(Math.round(seconden)));
-  el.voortgang.setAttribute('aria-valuetext', `${tijd(seconden) || '0:00'} van ${tijd(totaal) || '0:00'}`);
-  el.tijdNu.textContent = tijd(seconden) || '0:00';
-  el.tijdNu.dateTime = duurAttribuut(seconden);
-  el.tijdTotaal.textContent = tijd(totaal) || '0:00';
-  el.tijdTotaal.dateTime = duurAttribuut(totaal);
+function zetPositie(s, totaal) {
+  const v = el.voortgang;
+  v.style.setProperty('--deel', String(totaal > 0 ? Math.min(Math.max(s / totaal, 0), 1) : 0));
+  v.setAttribute('aria-valuemax', String(Math.round(totaal)));
+  v.setAttribute('aria-valuenow', String(Math.round(s)));
+  v.setAttribute('aria-valuetext', `${tijd(s) || '0:00'} van ${tijd(totaal) || '0:00'}`);
+  for (const [t, w] of [[el.tijdNu, s], [el.tijdTotaal, totaal]]) {
+    t.textContent = tijd(w) || '0:00';
+    t.dateTime = duurAttribuut(w);
+  }
 }
 
-function positieVanX(x) {
-  const r = el.voortgang.getBoundingClientRect();
-  const marge = 16;
-  const deel = Math.min(Math.max((x - r.left - marge) / (r.width - 2 * marge), 0), 1);
-  return deel * duurNu();
-}
-
+// Eigen schuif: op iPad kan een standaard range-invoer niet zoeken met één tik.
 function bindSchuif() {
   const s = el.voortgang;
   let doel = 0;
-  s.addEventListener('pointerdown', (e) => {
-    if (!huidige || !duurNu()) return;
-    e.preventDefault();
-    s.setPointerCapture(e.pointerId);
-    sleept = true;
-    doel = positieVanX(e.clientX);
+  const naar = (e) => {
+    const r = s.getBoundingClientRect();
+    doel = Math.min(Math.max((e.clientX - r.left - 16) / (r.width - 32), 0), 1) * duurNu();
     zetPositie(doel, duurNu());
-  });
-  s.addEventListener('pointermove', (e) => {
-    if (!sleept) return;
-    doel = positieVanX(e.clientX);
-    zetPositie(doel, duurNu());
-  });
+  };
   const los = () => {
     if (!sleept) return;
     sleept = false;
     el.audio.currentTime = doel;
   };
+  s.addEventListener('pointerdown', (e) => {
+    if (!huidige || !duurNu()) return;
+    e.preventDefault();
+    s.setPointerCapture(e.pointerId);
+    sleept = true;
+    naar(e);
+  });
+  s.addEventListener('pointermove', (e) => { if (sleept) naar(e); });
   s.addEventListener('pointerup', los);
   s.addEventListener('pointercancel', los);
   s.addEventListener('keydown', (e) => {
-    if (!huidige) return;
-    const stappen = { ArrowRight: 10, ArrowUp: 10, ArrowLeft: -10, ArrowDown: -10 };
-    let nieuw = null;
-    if (e.key in stappen) nieuw = el.audio.currentTime + stappen[e.key];
-    if (e.key === 'Home') nieuw = 0;
-    if (e.key === 'End') nieuw = duurNu();
-    if (nieuw === null) return;
+    const stap = { ArrowRight: 10, ArrowUp: 10, ArrowLeft: -10, ArrowDown: -10 }[e.key];
+    const nieuw = e.key === 'Home' ? 0 : e.key === 'End' ? duurNu() : stap ? el.audio.currentTime + stap : null;
+    if (!huidige || nieuw === null) return;
     e.preventDefault();
     el.audio.currentTime = Math.min(Math.max(nieuw, 0), duurNu());
   });
@@ -653,7 +441,6 @@ async function houdSchermAan(aan) {
       wekslot.addEventListener('release', () => { wekslot = null; });
     } else if (!aan && wekslot) {
       await wekslot.release();
-      wekslot = null;
     }
   } catch {
     wekslot = null;
@@ -670,29 +457,21 @@ function bindAudio() {
     toonSpeler();
     meldStatus('De opname is afgelopen.');
   });
-  a.addEventListener('timeupdate', () => {
-    if (!sleept) zetPositie(a.currentTime, duurNu());
-  });
+  a.addEventListener('timeupdate', () => { if (!sleept) zetPositie(a.currentTime, duurNu()); });
   a.addEventListener('durationchange', () => {
-    const d = a.duration;
-    if (!huidige || !Number.isFinite(d) || d <= 0) return;
+    if (!huidige || !Number.isFinite(a.duration) || a.duration <= 0) return;
     if (!huidige.duur) {
-      huidige.duur = d;
-      bewaar(['opnames'], [['opnames', huidige]]).catch(() => {});
-      if (gekozen) toonOpnames();
+      huidige.duur = a.duration;
+      bewaar([['opnames', huidige]]).catch(() => {});
+      toonOpnames();
     }
-    zetPositie(a.currentTime, d);
+    zetPositie(a.currentTime, a.duration);
   });
-  a.addEventListener('error', () => {
-    if (huidige && a.getAttribute('src')) meldStatus('Deze opname kan niet worden afgespeeld.');
-  });
-
-  if ('mediaSession' in navigator) {
-    try {
-      navigator.mediaSession.setActionHandler('play', () => speel());
-      navigator.mediaSession.setActionHandler('pause', () => a.pause());
-    } catch { /* niet ondersteund */ }
-  }
+  a.addEventListener('error', () => { if (huidige && a.getAttribute('src')) meldStatus('Deze opname kan niet worden afgespeeld.'); });
+  try {
+    navigator.mediaSession?.setActionHandler('play', speel);
+    navigator.mediaSession?.setActionHandler('pause', () => a.pause());
+  } catch { /* niet ondersteund */ }
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && !a.paused) houdSchermAan(true);
   });
@@ -701,224 +480,140 @@ function bindAudio() {
 /* ---------- Inlezen ---------- */
 
 function deelIn(bestanden) {
-  const items = bestanden.map((f) => ({
-    f,
-    pad: (f.webkitRelativePath || f.name).split('/').filter(Boolean),
-  })).filter(({ pad }) => !pad.some((d) => d.startsWith('.')));
-
-  const audio = [];
-  const huisstijl = [];
+  const items = bestanden.map((f) => ({ f, pad: (f.webkitRelativePath || f.name).split('/').filter(Boolean) }))
+    .filter(({ pad }) => !pad.some((d) => d.startsWith('.')));
+  const alleenLos = items.filter((x) => AUDIO.test(x.f.name)).every((x) => x.pad.length <= 2);
+  const audio = [], huisstijl = [];
   let overgeslagen = 0;
 
-  const isAudio = (f) => AUDIO_EXT.test(f.name);
-  const alleenLos = items.filter((x) => isAudio(x.f)).every((x) => x.pad.length <= 2);
-
-  for (const x of items) {
-    const mappen = x.pad.slice(0, -1);
-    if (mappen.some((m) => HUISSTIJL_MAP.test(m))) {
-      if (LETTER_EXT.test(x.f.name)) huisstijl.push({ ...x, soort: 'letter' });
-      else if (LOGO_NAAM.test(x.f.name)) huisstijl.push({ ...x, soort: 'logo' });
-      continue;
+  for (const { f, pad } of items) {
+    if (pad.slice(0, -1).some((m) => /^_huisstijl$/i.test(m))) {
+      if (LETTER.test(f.name) || LOGO.test(f.name)) huisstijl.push({ f, soort: LETTER.test(f.name) ? 'letter' : 'logo' });
+    } else if (!AUDIO.test(f.name)) {
+      overgeslagen++;
+    } else {
+      const map = pad.length >= 3 ? pad[1] : pad.length === 2 && alleenLos ? pad[0] : OVERIG;
+      if (!map.startsWith('_')) audio.push({ f, ministerieSleutel: map, sleutel: f.name });
     }
-    if (!isAudio(x.f)) {
-      overgeslagen += 1;
-      continue;
-    }
-    let map;
-    if (x.pad.length >= 3) map = x.pad[1];
-    else if (x.pad.length === 2 && alleenLos) map = x.pad[0];
-    else map = OVERIG;
-    if (map.startsWith('_')) continue;
-    audio.push({ f: x.f, ministerieSleutel: map, sleutel: x.f.name });
   }
 
-  // Namen opschonen; nummering per groep van buren bepalen.
-  const mapNummering = heeftNummering([...new Set(audio.map((a) => a.ministerieSleutel))]);
-  const perMap = new Map();
-  for (const a of audio) {
-    if (!perMap.has(a.ministerieSleutel)) perMap.set(a.ministerieSleutel, []);
-    perMap.get(a.ministerieSleutel).push(a.sleutel);
-  }
-  const bestandNummering = new Map([...perMap].map(([map, namen]) => [map, heeftNummering(namen)]));
+  const mappen = [...new Set(audio.map((a) => a.ministerieSleutel))];
+  const mapNummering = heeftNummering(mappen);
+  const bestandNummering = new Map(mappen.map((m) => [m, heeftNummering(audio.filter((a) => a.ministerieSleutel === m).map((a) => a.sleutel))]));
   for (const a of audio) {
     a.ministerie = a.ministerieSleutel === OVERIG ? OVERIG : schoneNaam(a.ministerieSleutel, false, mapNummering);
     a.titel = schoneNaam(a.sleutel, true, bestandNummering.get(a.ministerieSleutel));
   }
-
-  const zonderMappen = items.length > 0 && items.every((x) => x.pad.length === 1);
-  return { audio, huisstijl, overgeslagen, zonderMappen };
+  return { audio, huisstijl, overgeslagen, zonderMappen: items.length > 0 && items.every((x) => x.pad.length === 1) };
 }
 
 function letterKenmerken(naam) {
   const n = naam.toLowerCase();
-  let gewicht = 400;
-  if (/(bold|vet|black|heavy)/.test(n)) gewicht = 700;
-  else if (/medium/.test(n)) gewicht = 500;
-  else if (/light|licht/.test(n)) gewicht = 300;
   return {
     familie: /serif/.test(n) && !/sans/.test(n) ? 'RO Serif' : 'RO Sans',
-    gewicht,
-    stijl: /(italic|cursief|oblique)/.test(n) ? 'italic' : 'normal',
+    gewicht: /bold|vet|black|heavy/.test(n) ? 700 : /medium/.test(n) ? 500 : /light|licht/.test(n) ? 300 : 400,
+    stijl: /italic|cursief|oblique/.test(n) ? 'italic' : 'normal',
   };
 }
 
+// Meteen lezen: de toegang tot de gekozen map kan later vervallen.
 async function leesBestand(f) {
-  // Direct lezen: de toegang tot de gekozen map kan na het kiezen vervallen.
   const buffer = await f.arrayBuffer();
-  return { buffer, blob: new Blob([buffer], { type: mimeVan(f.name, f.type) }) };
+  return { buffer, blob: new Blob([buffer], { type: MIME[extensie(f.name)] || f.type || 'application/octet-stream' }) };
 }
 
-function isVolFout(e) {
-  return e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''));
-}
+const isVol = (e) => e?.name === 'QuotaExceededError' || /quota/i.test(e?.message || '');
 
 function zetBezig(aan) {
   bezig = aan;
   el.knopMap.classList.toggle('is-uit', aan);
-  el.invoerMap.disabled = aan;
-  for (const k of [el.knopUpdate, el.knopWissen, el.knopSluiten]) k.disabled = aan;
+  for (const k of [el.invoerMap, el.knopUpdate, el.knopWissen, el.knopSluiten]) k.disabled = aan;
   el.inlezen.hidden = !aan;
 }
 
-function toonBeheerMelding(tekst, soort) {
+function toonBeheerMelding(tekst, soort = '') {
   el.beheerMelding.textContent = tekst;
-  el.beheerMelding.className = `melding${soort ? ` melding-${soort}` : ''}`;
+  el.beheerMelding.className = soort ? `melding melding-${soort}` : 'melding';
   el.beheerMelding.hidden = !tekst;
 }
 
 async function leesMapIn(lijst) {
-  const { audio, huisstijl, overgeslagen, zonderMappen } = deelIn(Array.from(lijst));
-  if (!audio.length) {
-    toonBeheerMelding('In deze map staan geen geluidsbestanden (mp3, m4a, aac of wav).', 'fout');
-    return;
-  }
+  const { audio, huisstijl, overgeslagen, zonderMappen } = deelIn([...lijst]);
+  if (!audio.length) return toonBeheerMelding('In deze map staan geen geluidsbestanden (mp3, m4a, aac of wav).', 'fout');
 
-  const batch = Date.now();
-  const fouten = [];
+  const batch = Date.now(), fouten = [];
+  let melding;
   toonBeheerMelding('');
   zetBezig(true);
   el.inlezenBalk.max = audio.length;
-
   try {
-    for (let i = 0; i < audio.length; i++) {
-      const item = audio[i];
+    for (const [i, a] of audio.entries()) {
       el.inlezenBalk.value = i;
-      el.inlezenTekst.textContent = `Bezig: ${i + 1} van ${audio.length}. ${item.titel}`;
+      el.inlezenTekst.textContent = `Bezig: ${i + 1} van ${audio.length}. ${a.titel}`;
       try {
-        const { buffer, blob } = await leesBestand(item.f);
-        const id = `${batch}-${i}`;
-        await bewaar(['opnames', 'audio'], [
-          ['audio', { id, blob }],
-          ['opnames', {
-            id,
-            batch,
-            ministerieSleutel: item.ministerieSleutel,
-            ministerie: item.ministerie,
-            sleutel: item.sleutel,
-            titel: item.titel,
-            duur: duurUitBuffer(buffer, item.f.name),
-            grootte: blob.size,
-            bestand: item.f.name,
-          }],
-        ]);
+        const { buffer, blob } = await leesBestand(a.f), id = `${batch}-${i}`;
+        const { ministerieSleutel, ministerie, sleutel, titel } = a;
+        await bewaar([['audio', { id, blob }], ['opnames', {
+          id, batch, ministerieSleutel, ministerie, sleutel, titel, duur: duurUitBuffer(buffer, a.f.name), grootte: blob.size, bestand: a.f.name,
+        }]]);
       } catch (e) {
-        if (isVolFout(e)) throw e;
-        fouten.push(`${item.f.name}: ${e.message || e.name}`);
+        if (isVol(e)) throw e;
+        fouten.push(`${a.f.name}: ${e.message || e.name}`);
       }
     }
     el.inlezenBalk.value = audio.length;
-
-    let letters = 0;
-    let logo = false;
-    if (huisstijl.length) {
-      el.inlezenTekst.textContent = 'Bezig met de huisstijl.';
-      for (let i = 0; i < huisstijl.length; i++) {
-        const h = huisstijl[i];
-        const { blob } = await leesBestand(h.f);
-        const record = { id: `${batch}-h${i}`, batch, soort: h.soort, bestand: h.f.name, blob };
-        if (h.soort === 'letter') {
-          Object.assign(record, letterKenmerken(h.f.name));
-          letters += 1;
-        } else {
-          logo = true;
-        }
-        await bewaar(['huisstijl'], [['huisstijl', record]]);
-      }
-      await zetMeta('huisstijlBatch', batch);
+    if (huisstijl.length) el.inlezenTekst.textContent = 'Bezig met de huisstijl.';
+    for (const [i, h] of huisstijl.entries()) {
+      const { blob } = await leesBestand(h.f);
+      await bewaar([['huisstijl', { id: `${batch}-h${i}`, batch, soort: h.soort, bestand: h.f.name, blob, ...(h.soort === 'letter' ? letterKenmerken(h.f.name) : {}) }]]);
     }
 
     const gelukt = audio.length - fouten.length;
     if (!gelukt) throw new Error('Geen enkele opname kon worden ingelezen.');
     await zetMeta('batch', batch);
+    if (huisstijl.length) await zetMeta('huisstijlBatch', batch);
     await ruimOp();
 
-    const regels = [`Klaar. ${opnamesTekst(gelukt)} ingelezen.`];
-    if (huisstijl.length) {
-      regels.push(`Huisstijl: ${letters} lettertype${letters === 1 ? '' : 's'}${logo ? ' en een logo' : ''}.`);
-    }
-    if (overgeslagen) regels.push(`${overgeslagen} bestand${overgeslagen === 1 ? '' : 'en'} overgeslagen, want dat is geen geluid.`);
-    if (zonderMappen) {
-      regels.push(`Deze iPad gaf geen mappen door. Alles staat onder '${OVERIG}'. Werk iPadOS bij naar 18.4 of nieuwer.`);
-    }
-    if (fouten.length) {
-      regels.push(`Niet gelukt (${fouten.length}):`, ...fouten.slice(0, 10).map((f) => `- ${f}`));
-    }
-    toonBeheerMelding(regels.join('\n'), fouten.length || zonderMappen ? 'let-op' : '');
+    const letters = huisstijl.filter((h) => h.soort === 'letter').length;
+    const regels = [`Klaar. ${meervoud(gelukt, 'opname', 'opnames')} ingelezen.`];
+    if (huisstijl.length) regels.push(`Huisstijl: ${meervoud(letters, 'lettertype', 'lettertypes')}${huisstijl.some((h) => h.soort === 'logo') ? ' en een logo' : ''}.`);
+    if (overgeslagen) regels.push(`${meervoud(overgeslagen, 'bestand', 'bestanden')} overgeslagen, want dat is geen geluid.`);
+    if (zonderMappen) regels.push(`Deze iPad gaf geen mappen door. Alles staat onder '${OVERIG}'. Werk iPadOS bij naar 18.4 of nieuwer.`);
+    if (fouten.length) regels.push(`Niet gelukt (${fouten.length}):`, ...fouten.slice(0, 10).map((f) => `- ${f}`));
+    melding = [regels.join('\n'), fouten.length || zonderMappen ? 'let-op' : ''];
   } catch (e) {
     console.error(e);
     await verwijderBatch(batch).catch(() => {});
-    toonBeheerMelding(isVolFout(e)
+    melding = [isVol(e)
       ? 'De iPad heeft niet genoeg ruimte. Er is niets veranderd. Maak ruimte vrij of kies minder opnames.'
-      : `Inlezen is niet gelukt. Er is niets veranderd.\n${e.message || e.name}`, 'fout');
-  } finally {
-    zetBezig(false);
+      : `Inlezen is niet gelukt. Er is niets veranderd.\n${e.message || e.name}`, 'fout'];
   }
-
-  try {
-    if (navigator.storage?.persist) await navigator.storage.persist();
-  } catch { /* geen probleem */ }
-
-  stopSpeler();
-  gekozen = null;
-  await laadHuisstijl();
-  await laadBibliotheek();
-  toonMinisteries();
-  toonOpnames();
-  toonOpslag();
+  try { await navigator.storage?.persist?.(); } catch { /* geen probleem */ }
+  await herlaad().finally(() => zetBezig(false));
+  toonBeheerMelding(...melding);
 }
 
-async function verwijderBatch(batch) {
-  const opnames = (await alles('opnames')).filter((o) => o.batch === batch).map((o) => o.id);
-  await verwijderIds(['opnames', 'audio'], opnames);
-  const huis = (await alles('huisstijl')).filter((h) => h.batch === batch).map((h) => h.id);
-  await verwijderIds(['huisstijl'], huis);
-}
-
-/* ---------- Huisstijl uit de map _huisstijl ---------- */
+/* ---------- Huisstijl uit de submap _huisstijl ---------- */
 
 async function laadHuisstijl() {
   const batch = await haal('meta', 'huisstijlBatch');
   const items = batch ? (await alles('huisstijl')).filter((h) => h.batch === batch) : [];
-
-  for (const f of geladenLetters) document.fonts.delete(f);
+  geladenLetters.forEach((f) => document.fonts.delete(f));
   geladenLetters = [];
   for (const h of items.filter((i) => i.soort === 'letter')) {
     try {
       const ff = new FontFace(h.familie, await h.blob.arrayBuffer(), { weight: String(h.gewicht), style: h.stijl });
-      await ff.load();
-      document.fonts.add(ff);
+      document.fonts.add(await ff.load());
       geladenLetters.push(ff);
     } catch (e) {
       console.warn('Lettertype niet geladen:', h.bestand, e);
     }
   }
-
   if (logoUrl) URL.revokeObjectURL(logoUrl);
-  logoUrl = null;
   const logo = items.find((i) => i.soort === 'logo');
+  logoUrl = logo ? URL.createObjectURL(logo.blob) : null;
   el.logoStrook.replaceChildren();
   if (logo) {
-    logoUrl = URL.createObjectURL(logo.blob);
     const img = maak('img');
     img.src = logoUrl;
     img.alt = 'Rijksoverheid';
@@ -937,42 +632,24 @@ function openBeheer() {
   el.beheer.showModal();
 }
 
-function sluitBeheer() {
-  if (!bezig) el.beheer.close();
-}
-
 async function toonOpslag() {
-  const regels = [];
   const n = [...bibliotheek.values()].reduce((som, g) => som + g.opnames.length, 0);
-  regels.push(n
-    ? `${opnamesTekst(n)} bij ${bibliotheek.size} ministerie${bibliotheek.size === 1 ? '' : 's'}.`
-    : 'Er staan geen opnames op deze iPad.');
+  const regels = [n ? `${meervoud(n, 'opname', 'opnames')} bij ${meervoud(bibliotheek.size, 'ministerie', 'ministeries')}.` : 'Er staan geen opnames op deze iPad.'];
   try {
-    if (navigator.storage?.estimate) {
-      const { usage = 0, quota = 0 } = await navigator.storage.estimate();
-      regels.push(`In gebruik: ${grootteTekst(usage)}. Maximaal: ${grootteTekst(quota)}.`);
-    }
+    const { usage = 0, quota = 0 } = (await navigator.storage?.estimate?.()) || {};
+    if (quota) regels.push(`In gebruik: ${grootteTekst(usage)}. Maximaal: ${grootteTekst(quota)}.`);
     if (navigator.storage?.persisted) {
-      regels.push(await navigator.storage.persisted()
-        ? 'De opslag is blijvend.'
-        : 'De opslag is niet blijvend. iPadOS kan de opnames wissen als de iPad vol raakt.');
+      regels.push(await navigator.storage.persisted() ? 'De opslag is blijvend.' : 'De opslag is niet blijvend. iPadOS kan de opnames wissen als de iPad vol raakt.');
     }
   } catch { /* niet ondersteund */ }
   el.opslagTekst.textContent = regels.join('\n');
 }
 
 async function zoekUpdate() {
-  if (!('serviceWorker' in navigator)) {
-    toonBeheerMelding('Updates werken alleen in de app op het beginscherm.', 'let-op');
-    return;
-  }
-  if (!navigator.onLine) {
-    toonBeheerMelding('Er is geen internet. Probeer het later opnieuw.', 'let-op');
-    return;
-  }
+  if (!navigator.onLine) return toonBeheerMelding('Er is geen internet. Probeer het later opnieuw.', 'let-op');
   el.knopUpdate.disabled = true;
   try {
-    const reg = await navigator.serviceWorker.getRegistration();
+    const reg = await navigator.serviceWorker?.getRegistration();
     if (!reg) throw new Error('Geen service worker');
     handmatigeUpdate = true;
     await reg.update();
@@ -983,7 +660,7 @@ async function zoekUpdate() {
       handmatigeUpdate = false;
       toonBeheerMelding(`Je hebt de nieuwste versie (${VERSIE}).`);
     }
-  } catch (e) {
+  } catch {
     handmatigeUpdate = false;
     toonBeheerMelding('Zoeken naar een update is niet gelukt. Probeer het later opnieuw.', 'let-op');
   } finally {
@@ -992,31 +669,24 @@ async function zoekUpdate() {
 }
 
 async function wisOpnames() {
-  if (!window.confirm('Alle opnames en de huisstijl wissen van deze iPad?')) return;
-  stopSpeler();
-  await wisAlles();
-  gekozen = null;
-  await laadHuisstijl();
-  await laadBibliotheek();
-  toonMinisteries();
-  toonOpnames();
-  toonOpslag();
+  if (!confirm('Alle opnames en de huisstijl wissen van deze iPad?')) return;
+  await tx(WINKELS, 'readwrite', (st) => WINKELS.forEach((w) => st(w).clear()));
+  await herlaad();
   toonBeheerMelding('Alles is gewist.');
 }
 
 function bindBeheer() {
-  // Verborgen ingang: 3 seconden op de blauwe balk drukken.
-  let timer = null;
-  const stop = () => { clearTimeout(timer); timer = null; };
+  // Verborgen ingang voor de beheerder: 3 seconden op de blauwe balk drukken.
+  let timer;
+  const stop = () => clearTimeout(timer);
   el.balk.addEventListener('pointerdown', () => {
     stop();
-    timer = setTimeout(() => { stop(); openBeheer(); }, LANG_DRUKKEN_MS);
+    timer = setTimeout(openBeheer, LANG_DRUKKEN_MS);
   });
   for (const t of ['pointerup', 'pointercancel', 'pointerleave']) el.balk.addEventListener(t, stop);
   document.addEventListener('contextmenu', (e) => e.preventDefault());
-
   el.knopLeegBeheer.addEventListener('click', openBeheer);
-  el.knopSluiten.addEventListener('click', sluitBeheer);
+  el.knopSluiten.addEventListener('click', () => { if (!bezig) el.beheer.close(); });
   el.beheer.addEventListener('cancel', (e) => { if (bezig) e.preventDefault(); });
   el.knopUpdate.addEventListener('click', zoekUpdate);
   el.knopWissen.addEventListener('click', () => wisOpnames().catch((e) => {
@@ -1024,10 +694,7 @@ function bindBeheer() {
     toonBeheerMelding('Wissen is niet gelukt.', 'fout');
   }));
   el.invoerMap.addEventListener('change', () => {
-    const bestanden = el.invoerMap.files;
-    if (bestanden && bestanden.length) {
-      leesMapIn(bestanden).finally(() => { el.invoerMap.value = ''; });
-    }
+    if (el.invoerMap.files?.length) leesMapIn(el.invoerMap.files).finally(() => { el.invoerMap.value = ''; });
   });
 }
 
@@ -1038,10 +705,20 @@ function stopSpeler() {
   el.audio.removeAttribute('src');
   el.audio.load();
   huidige = null;
-  for (const url of blobUrls.values()) URL.revokeObjectURL(url);
+  blobUrls.forEach((url) => URL.revokeObjectURL(url));
   blobUrls.clear();
   zetPositie(0, 0);
   toonSpeler();
+}
+
+async function herlaad() {
+  stopSpeler();
+  gekozen = null;
+  await laadHuisstijl();
+  await laadBibliotheek();
+  toonMinisteries();
+  toonOpnames();
+  await toonOpslag();
 }
 
 function naarBegin() {
@@ -1056,50 +733,43 @@ function naarBegin() {
 }
 
 function bindRust() {
-  const actie = () => { laatsteActie = Date.now(); inRust = false; };
-  for (const t of ['pointerdown', 'keydown', 'wheel']) {
-    window.addEventListener(t, actie, { capture: true, passive: true });
-  }
+  const actie = () => {
+    laatsteActie = Date.now();
+    inRust = false;
+  };
+  for (const t of ['pointerdown', 'keydown', 'wheel']) addEventListener(t, actie, { capture: true, passive: true });
   setInterval(() => {
-    if (bezig || !el.audio.paused) return;
-    if (Date.now() - laatsteActie < RUST_NA_MS) return;
-    if (updateKlaar) {
-      location.reload();
-      return;
-    }
-    if (!inRust) naarBegin();
+    if (bezig || !el.audio.paused || Date.now() - laatsteActie < RUST_NA_MS) return;
+    if (updateKlaar) location.reload();
+    else if (!inRust) naarBegin();
   }, 10000);
 }
 
-/* ---------- Service worker ---------- */
+/* ---------- Service worker en start ---------- */
 
 function registreerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   const hadBeheerder = Boolean(navigator.serviceWorker.controller);
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!hadBeheerder) return;               // eerste installatie
+    if (!hadBeheerder) return; // eerste installatie
     if (handmatigeUpdate) location.reload();
-    else updateKlaar = true;                 // herladen zodra niemand luistert
+    else updateKlaar = true; // herladen zodra niemand luistert
   });
   navigator.serviceWorker.register('sw.js').then((reg) => {
     reg.update().catch(() => {});
-    setInterval(() => { if (navigator.onLine) reg.update().catch(() => {}); }, UPDATE_INTERVAL_MS);
+    setInterval(() => { if (navigator.onLine) reg.update().catch(() => {}); }, UPDATE_ELKE_MS);
   }).catch((e) => console.warn('Service worker niet geregistreerd', e));
 }
 
-/* ---------- Start ---------- */
-
 async function start() {
   el.versie.textContent = VERSIE;
-  // Mappen kiezen (iPadOS 18.4+). Via script, want webkitdirectory is geen HTML-standaardattribuut.
-  el.invoerMap.webkitdirectory = true;
+  el.invoerMap.webkitdirectory = true; // Mappen kiezen (iPadOS 18.4+). Geen HTML-standaard, dus via script.
   bindAudio();
   bindSchuif();
   bindBeheer();
   bindRust();
   el.spelerKnop.addEventListener('click', wissel);
   registreerServiceWorker();
-
   try {
     await ruimOp();
     await laadHuisstijl();

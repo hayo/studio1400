@@ -5,7 +5,9 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 ## Afspraken
 
 - Gebruiksgemak gaat voor alles. Grote tikvlakken (minimaal 56 px), geen gebaren of verborgen bediening voor bezoekers.
-- Rijkshuisstijl van DPC: lintblauw `#154273`, hemelblauw `#007bc7`, tekst zwart, RO Sans. Logo boven in het midden.
+- Rijkshuisstijl van DPC: lintblauw `#154273` voor structuur (kopbalk, speler, koppen), robijnrood `#ca005d` als accent (gekozen ministerie, afspeelknoppen, voortgang, primaire knoppen), hemelblauw `#007bc7` alleen voor focus. Tekst zwart, RO Sans. Logo boven in het midden.
+- Uitstraling: witte kaarten (radius 16 px, zachte schaduw) op lichtblauwgrijze achtergrond `#edf1f6`. Kleuren staan als custom properties in `:root` van `app.css`.
+- Code compact houden: geen herhaling, korte helpers, alleen commentaar dat iets uitlegt wat de code niet zegt. Achtergrond en learnings horen in dit bestand, niet in de code.
 - Moet standalone draaien op een iPad. Geen Mac, geen eigen hosting, geen ontwikkelaarsaccount, geen MDM.
 - Teksten in app en README: Nederlands, taalniveau B1.
 - Geen vermelding van AI-hulp, nergens: geen `Co-Authored-By`, geen sessielinks, geen "generated with" in commits, PR's, code of documentatie.
@@ -44,6 +46,9 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - `webkitdirectory` is geen HTML-standaardattribuut. Zet het in JS (`input.webkitdirectory = true`), dan valideert de bron.
 - Een `<img>` zonder `src` is ongeldig. Het logo maakt JS pas aan als er een logo is.
 - Safari op iPadOS heeft voor `user-select` nog `-webkit-user-select` nodig (met `stylelint-disable-next-line`).
+- `:has()` (Safari 15.4+) gebruiken we om de lege ministeriekaart te verbergen: `.inhoud:has(> .ministeries[hidden])`.
+- Overgangen op knoppen (150 ms): wacht in tests even voor een schermafbeelding. `prefers-reduced-motion` zet alle animaties uit.
+- De meldingen na inlezen pas tonen als de bibliotheek opnieuw is geladen, anders laat Beheer verouderde opslaggegevens zien.
 - `vnu` weigert localhost-URL's. Controleer bestanden direct; de CSP-meldingen (info) zijn dan een bijeffect van `file:`.
 
 ## Testen
@@ -56,4 +61,5 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 
 - Testen op een echte iPad: afspelen na tik, map inlezen, blijvende opslag, Begeleide toegang.
 - Officieel logo en RO Sans aanleveren in `_huisstijl`.
+- Kleuren van communicatierijk.nl zijn niet bekeken (browser niet gebruikt). Robijnrood komt uit de Rijkshuisstijl; nog vergelijken met de site.
 - VoiceOver op iPad: controleren of de lijsten als lijst worden voorgelezen (WebKit laat dat soms vallen bij `list-style: none`).
