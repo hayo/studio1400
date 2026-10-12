@@ -1,0 +1,18 @@
+{
+  "name": "Studio 1400",
+  "short_name": "Studio 1400",
+  "description": "Opnames per ministerie kiezen en beluisteren.",
+  "lang": "nl",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#154273",
+  "icons": [
+    { "src": "iconen/icoon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "iconen/icoon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "iconen/icoon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

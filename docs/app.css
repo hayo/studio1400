@@ -1,0 +1,589 @@
+/* Studio 1400 — Rijkshuisstijl, gemaakt voor iPad (aanraken, liggend en staand) */
+
+:root {
+  --lintblauw: #154273;
+  --hemelblauw: #007bc7;
+  --lichtblauw: #8fcae7;
+  --tint: #e5eff8;
+  --wit: #fff;
+  --zwart: #000;
+  --grijs-1: #f3f3f3;
+  --grijs-2: #e6e6e6;
+  --grijs-3: #ccc;
+  --grijs-7: #535353;
+  --rood: #d52b1e;
+  --geel-licht: #fff4dc;
+  --letter: "RO Sans", "RijksoverheidSansWebText", verdana, arial, sans-serif;
+  --rand: 24px;
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--wit);
+}
+
+body {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: var(--letter);
+  font-size: 20px;
+  line-height: 1.4;
+  color: var(--zwart);
+  overscroll-behavior: none;
+
+  /* Kiosk: geen selectie of menu bij lang drukken. Safari op iPadOS kent alleen de -webkit-variant van user-select. */
+  /* stylelint-disable-next-line property-no-vendor-prefix */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3,
+p { margin: 0; }
+
+button,
+input,
+.knop {
+  font: inherit;
+  touch-action: manipulation;
+}
+
+.verborgen {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[hidden] { display: none !important; }
+
+:focus-visible {
+  outline: 3px solid var(--hemelblauw);
+  outline-offset: 2px;
+}
+
+/* ---------- Kop ---------- */
+
+.kop { padding-top: env(safe-area-inset-top); }
+
+.logo-strook {
+  display: flex;
+  justify-content: center;
+  padding: 12px var(--rand) 8px;
+  background: var(--wit);
+}
+
+.logo-strook img {
+  display: block;
+  height: 72px;
+  width: auto;
+}
+
+.balk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 24px;
+  padding: 16px calc(var(--rand) + env(safe-area-inset-right)) 16px calc(var(--rand) + env(safe-area-inset-left));
+  background: var(--lintblauw);
+  color: var(--wit);
+}
+
+.balk h1 {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.balk .uitleg { font-size: 20px; }
+
+/* ---------- Inhoud: twee kolommen ---------- */
+
+.inhoud {
+  display: grid;
+  grid-template-columns: minmax(280px, 36%) 1fr;
+  min-height: 0;
+}
+
+.ministeries,
+.opnames {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ministeries {
+  background: var(--grijs-1);
+  border-right: 1px solid var(--grijs-3);
+  padding-left: env(safe-area-inset-left);
+}
+
+.opnames { padding-right: env(safe-area-inset-right); }
+
+.kolomkop {
+  padding: 20px var(--rand) 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--lintblauw);
+}
+
+.opnames-kop {
+  padding: 20px var(--rand) 16px;
+  border-bottom: 2px solid var(--lintblauw);
+}
+
+.kolomkop-groot {
+  padding: 0;
+  font-size: 28px;
+  line-height: 1.25;
+}
+
+.samenvatting {
+  margin-top: 4px;
+  color: var(--grijs-7);
+}
+
+.lijst {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Ministerie-knoppen */
+
+.ministerie {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 72px;
+  padding: 14px var(--rand);
+  border: 0;
+  border-bottom: 1px solid var(--grijs-3);
+  background: transparent;
+  color: var(--zwart);
+  font-size: 22px;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ministerie:active { background: var(--grijs-2); }
+
+.ministerie .naam {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ministerie .aantal {
+  min-width: 2.2em;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--wit);
+  color: var(--grijs-7);
+  font-size: 18px;
+  text-align: center;
+}
+
+.ministerie-pijl {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--lintblauw);
+}
+
+.ministerie[aria-current="true"] {
+  background: var(--lintblauw);
+  color: var(--wit);
+}
+
+.ministerie[aria-current="true"] .aantal {
+  background: rgb(255 255 255 / 20%);
+  color: var(--wit);
+}
+
+.ministerie[aria-current="true"] .ministerie-pijl { color: var(--wit); }
+
+/* Opname-knoppen */
+
+.opname {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  min-height: 84px;
+  padding: 14px var(--rand);
+  border: 0;
+  border-bottom: 1px solid var(--grijs-3);
+  background: var(--wit);
+  color: var(--zwart);
+  font-size: 22px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+
+.opname:active { background: var(--grijs-1); }
+
+.opname .icoon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--lintblauw);
+  border-radius: 50%;
+  color: var(--lintblauw);
+}
+
+.opname-teken {
+  width: 26px;
+  height: 26px;
+  fill: currentcolor;
+}
+
+.opname-teken.afspelen { margin-left: 3px; }
+
+.opname .naam {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.opname .duur {
+  color: var(--grijs-7);
+  font-variant-numeric: tabular-nums;
+}
+
+.opname[aria-current="true"] { background: var(--tint); }
+
+.opname[aria-current="true"] .naam { font-weight: 700; }
+
+.opname[aria-current="true"] .icoon {
+  background: var(--lintblauw);
+  color: var(--wit);
+}
+
+/* Lege toestanden */
+
+.hint {
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+  padding: 72px var(--rand);
+  color: var(--grijs-7);
+  font-size: 24px;
+  text-align: center;
+}
+
+/* ---------- Speler ---------- */
+
+.speler {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 24px;
+  padding: 16px calc(var(--rand) + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(var(--rand) + env(safe-area-inset-left));
+  background: var(--lintblauw);
+  color: var(--wit);
+}
+
+.speler-knop {
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--wit);
+  color: var(--lintblauw);
+  cursor: pointer;
+}
+
+.speler-teken {
+  width: 36px;
+  height: 36px;
+  fill: currentcolor;
+}
+
+.speler-teken.afspelen { margin-left: 4px; }
+
+.speler-knop:active { background: var(--lichtblauw); }
+
+.speler-knop:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.speler-knop:focus-visible { outline-color: var(--wit); }
+
+.speler-midden { min-width: 0; }
+
+.speler-titel {
+  overflow: hidden;
+  font-size: 22px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.speler-ministerie {
+  min-height: 1.4em;
+  overflow: hidden;
+  font-size: 18px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+}
+
+.speler-tijdlijn {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.tijd {
+  min-width: 3.2em;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tijd:last-child { text-align: right; }
+
+/* Schuifbalk: eigen schuif, zodat tikken én slepen werkt op iPad */
+
+.schuif {
+  --deel: 0;
+
+  position: relative;
+  height: 44px;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.schuif-spoor {
+  position: absolute;
+  top: 18px;
+  right: 16px;
+  left: 16px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 30%);
+}
+
+.schuif-vulling {
+  width: calc(var(--deel) * 100%);
+  height: 100%;
+  background: var(--wit);
+}
+
+.schuif-duim {
+  position: absolute;
+  top: 6px;
+  left: calc(16px + (100% - 32px) * var(--deel));
+  width: 32px;
+  height: 32px;
+  margin-left: -16px;
+  border-radius: 50%;
+  background: var(--wit);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
+}
+
+.schuif[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.schuif:focus-visible { outline-color: var(--wit); }
+
+/* ---------- Knoppen ---------- */
+
+.knop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 28px;
+  border: 2px solid var(--lintblauw);
+  border-radius: 4px;
+  background: var(--lintblauw);
+  color: var(--wit);
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.knop:active {
+  border-color: var(--hemelblauw);
+  background: var(--hemelblauw);
+}
+
+label.knop:focus-within {
+  outline: 3px solid var(--hemelblauw);
+  outline-offset: 2px;
+}
+
+.knop-tweede {
+  background: var(--wit);
+  color: var(--lintblauw);
+}
+
+.knop-tweede:active { background: var(--tint); }
+
+.knop-gevaar {
+  border-color: var(--rood);
+  background: var(--wit);
+  color: var(--rood);
+}
+
+.knop-gevaar:active {
+  border-color: var(--rood);
+  background: #fbe9e8;
+}
+
+.knop:disabled,
+.knop.is-uit {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.knoppen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.knoppen-einde {
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+/* ---------- Beheer ---------- */
+
+.beheer {
+  width: min(680px, calc(100vw - 48px));
+  max-height: calc(100dvh - 48px);
+  padding: 32px;
+  border: 0;
+  border-top: 8px solid var(--lintblauw);
+  border-radius: 4px;
+  color: var(--zwart);
+  overflow-y: auto;
+  /* stylelint-disable-next-line property-no-vendor-prefix */
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.beheer::backdrop { background: rgb(0 0 0 / 55%); }
+
+.beheer h2 {
+  margin-bottom: 16px;
+  font-size: 28px;
+  color: var(--lintblauw);
+}
+
+.beheer h3 {
+  margin-bottom: 8px;
+  font-size: 22px;
+}
+
+.beheer-blok {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--grijs-3);
+}
+
+.inlezen {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.inlezen progress {
+  width: 100%;
+  height: 16px;
+  accent-color: var(--lintblauw);
+}
+
+.regels { white-space: pre-line; }
+
+.melding {
+  width: 100%;
+  padding: 12px 16px;
+  border-left: 6px solid var(--lintblauw);
+  background: var(--tint);
+  white-space: pre-line;
+}
+
+.melding-let-op {
+  border-left-color: #e17000;
+  background: var(--geel-licht);
+}
+
+.melding-fout {
+  border-left-color: var(--rood);
+  background: #fbe9e8;
+}
+
+/* ---------- Staand (iPad rechtop) ---------- */
+
+@media (width <= 900px) {
+  .inhoud { grid-template-columns: minmax(300px, 40%) 1fr; }
+
+  .ministerie {
+    gap: 12px;
+    font-size: 20px;
+  }
+
+  .ministerie-pijl { display: none; }
+
+  .opname {
+    gap: 16px;
+    font-size: 20px;
+  }
+}
+
+/* ---------- Smal scherm (gesplitst scherm) ---------- */
+
+@media (width <= 700px) {
+  :root { --rand: 16px; }
+
+  .inhoud {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .ministeries {
+    max-height: 38vh;
+    border-right: 0;
+    border-bottom: 1px solid var(--grijs-3);
+  }
+
+  .balk .uitleg { font-size: 18px; }
+
+  .speler-knop {
+    width: 64px;
+    height: 64px;
+  }
+}

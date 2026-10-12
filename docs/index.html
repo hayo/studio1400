@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; font-src 'self' blob: data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Studio 1400">
+  <meta name="theme-color" content="#154273">
+  <title>Studio 1400</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="iconen/icoon-180.png">
+  <link rel="icon" href="iconen/icoon-192.png">
+  <link rel="stylesheet" href="app.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <svg class="verborgen" aria-hidden="true" focusable="false">
+    <symbol id="i-afspelen" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></symbol>
+    <symbol id="i-pauze" viewBox="0 0 24 24"><rect x="6" y="5" width="4.5" height="14" rx="1"/><rect x="13.5" y="5" width="4.5" height="14" rx="1"/></symbol>
+    <symbol id="i-pijl" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <header class="kop">
+    <div class="logo-strook" id="logo-strook" hidden></div>
+    <div class="balk" id="balk">
+      <h1 id="titel">Studio 1400</h1>
+      <p class="uitleg">Kies een ministerie. Tik daarna op een opname om te luisteren.</p>
+    </div>
+  </header>
+
+  <main class="inhoud">
+    <section class="ministeries" aria-labelledby="kop-ministeries">
+      <h2 id="kop-ministeries" class="kolomkop">Ministeries</h2>
+      <ul id="lijst-ministeries" class="lijst"></ul>
+    </section>
+
+    <section class="opnames" aria-labelledby="kop-opnames">
+      <div id="opnames-kop" class="opnames-kop" hidden>
+        <h2 id="kop-opnames" class="kolomkop kolomkop-groot">Opnames</h2>
+        <p id="samenvatting" class="samenvatting"></p>
+      </div>
+      <ul id="lijst-opnames" class="lijst"></ul>
+
+      <div id="hint" class="hint" hidden>
+        <p>Kies links een ministerie.</p>
+      </div>
+
+      <div id="leeg" class="hint" hidden>
+        <p>Er staan nog geen opnames op deze iPad.</p>
+        <button type="button" class="knop" id="knop-leeg-beheer">Opnames inlezen</button>
+      </div>
+    </section>
+  </main>
+
+  <section class="speler" aria-labelledby="kop-speler">
+    <h2 id="kop-speler" class="verborgen">Speler</h2>
+    <button type="button" class="speler-knop" id="speler-knop" aria-label="Afspelen" disabled>
+      <svg class="speler-teken afspelen" aria-hidden="true" focusable="false"><use href="#i-afspelen"></use></svg>
+    </button>
+    <div class="speler-midden">
+      <p class="speler-titel" id="speler-titel">Kies een opname</p>
+      <p class="speler-ministerie" id="speler-ministerie"></p>
+      <div class="speler-tijdlijn">
+        <time class="tijd" id="tijd-nu" datetime="PT0S">0:00</time>
+        <div class="schuif" id="voortgang" role="slider" tabindex="-1" aria-label="Positie in de opname"
+             aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00 van 0:00" aria-disabled="true">
+          <div class="schuif-spoor"><div class="schuif-vulling"></div></div>
+          <div class="schuif-duim"></div>
+        </div>
+        <time class="tijd" id="tijd-totaal" datetime="PT0S">0:00</time>
+      </div>
+    </div>
+  </section>
+
+  <dialog id="beheer" class="beheer" aria-labelledby="beheer-kop">
+    <h2 id="beheer-kop">Beheer</h2>
+
+    <p id="beheer-waarschuwing" class="melding melding-let-op" hidden>Je gebruikt de app nu in Safari. Zet hem eerst op het beginscherm en lees de map daar in. Safari en de app op het beginscherm delen geen opslag.</p>
+
+    <section class="beheer-blok">
+      <h3>Opnames inlezen</h3>
+      <p>Kies de map met opnames. Elke submap is een ministerie. Dit vervangt de opnames die er nu op staan.</p>
+      <label class="knop" id="knop-map">
+        Map kiezen
+        <input type="file" id="invoer-map" multiple class="verborgen">
+      </label>
+      <div id="inlezen" class="inlezen" hidden>
+        <progress id="inlezen-balk" max="1" value="0"></progress>
+        <p id="inlezen-tekst" aria-live="polite"></p>
+      </div>
+      <p id="beheer-melding" class="melding" aria-live="polite" hidden></p>
+    </section>
+
+    <section class="beheer-blok">
+      <h3>Opslag</h3>
+      <p id="opslag-tekst" class="regels">Bezig met ophalen…</p>
+    </section>
+
+    <section class="beheer-blok">
+      <h3>App</h3>
+      <p>Versie <span id="versie"></span></p>
+      <div class="knoppen">
+        <button type="button" class="knop knop-tweede" id="knop-update">Zoek naar update</button>
+        <button type="button" class="knop knop-gevaar" id="knop-wissen">Alle opnames wissen</button>
+      </div>
+    </section>
+
+    <div class="knoppen knoppen-einde">
+      <button type="button" class="knop" id="knop-sluiten">Sluiten</button>
+    </div>
+  </dialog>
+
+  <p id="status" class="verborgen" role="status"></p>
+  <audio id="audio" preload="none"></audio>
+</body>
+</html>
