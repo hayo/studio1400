@@ -26,10 +26,14 @@
 *::before,
 *::after { box-sizing: border-box; }
 
+/* De huisstijl kent geen vet: hiërarchie met grootte en kleur. */
 h1,
 h2,
 h3,
-p { margin: 0; }
+p {
+  margin: 0;
+  font-weight: normal;
+}
 
 [hidden] { display: none !important; }
 
@@ -49,6 +53,7 @@ body {
   background: var(--achtergrond);
   color: var(--zwart);
   font: 20px/1.4 var(--letter);
+  font-synthesis: none;
   overscroll-behavior: none;
 
   /* Kiosk: geen selectie of menu bij lang drukken. Safari op iPadOS kent alleen de -webkit-variant van user-select. */
@@ -200,7 +205,6 @@ button:active { transform: scale(0.98); }
   background: transparent;
   color: var(--zwart);
   font-size: 22px;
-  font-weight: 700;
   line-height: 1.25;
   text-align: left;
 }
@@ -294,7 +298,6 @@ button:active { transform: scale(0.98); }
 
 .opname[aria-current="true"] .naam {
   color: var(--robijnrood-donker);
-  font-weight: 700;
 }
 
 .opname[aria-current="true"] .icoon {
@@ -359,7 +362,6 @@ button:active { transform: scale(0.98); }
 .hint-tekst {
   color: var(--lintblauw);
   font-size: 26px;
-  font-weight: 700;
 }
 
 /* ---------- Speler ---------- */
@@ -420,7 +422,6 @@ button:active { transform: scale(0.98); }
 
 .speler-titel {
   font-size: 23px;
-  font-weight: 700;
 }
 
 .speler-tijdlijn {
@@ -497,7 +498,6 @@ button:active { transform: scale(0.98); }
   background: var(--robijnrood);
   color: var(--wit);
   font-size: 20px;
-  font-weight: 700;
 }
 
 .knop:active {

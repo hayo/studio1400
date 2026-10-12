@@ -7,7 +7,7 @@
  * Verhoog VERSIE hier én in sw.js bij elke wijziging.
  */
 
-const VERSIE = '1.1.1';
+const VERSIE = '1.1.2';
 const RUST_NA_MS = 2 * 60 * 1000;
 const LANG_DRUKKEN_MS = 3000;
 const UPDATE_ELKE_MS = 6 * 60 * 60 * 1000;
@@ -511,7 +511,6 @@ function letterKenmerken(naam) {
   const n = naam.toLowerCase();
   return {
     familie: /serif/.test(n) && !/sans/.test(n) ? 'RO Serif' : 'RO Sans',
-    gewicht: /bold|vet|black|heavy/.test(n) ? 700 : /medium/.test(n) ? 500 : /light|licht/.test(n) ? 300 : 400,
     stijl: /italic|cursief|oblique/.test(n) ? 'italic' : 'normal',
   };
 }
@@ -602,7 +601,7 @@ async function laadHuisstijl() {
   geladenLetters = [];
   for (const h of items.filter((i) => i.soort === 'letter')) {
     try {
-      const ff = new FontFace(h.familie, await h.blob.arrayBuffer(), { weight: String(h.gewicht), style: h.stijl });
+      const ff = new FontFace(h.familie, await h.blob.arrayBuffer(), { style: h.stijl });
       document.fonts.add(await ff.load());
       geladenLetters.push(ff);
     } catch (e) {

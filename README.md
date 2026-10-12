@@ -49,10 +49,9 @@ Studio1400/
 
 RO Sans en het logo horen niet in een openbare repo. Zet ze daarom in de submap `_huisstijl`:
 
-- de lettertypebestanden van RO Sans (woff2, woff, ttf of otf). Staat `bold` in de naam, dan wordt het vet. Staat `italic` in de naam, dan wordt het cursief.
+- de lettertypebestanden van RO Sans (woff2, woff, ttf of otf). Staat `italic` in de naam, dan wordt het cursief. De app gebruikt geen vette letter.
 - het logo: een svg- of png-bestand met `logo` in de naam, bijvoorbeeld `header-logo.svg`.
 - Iconenfonts (met `icon` in de naam) slaat de app over.
-- Is er geen vette variant, dan maakt de iPad de tekst zelf vet. Met een bestand als `rijks-sans-bold.woff2` ziet dat er beter uit.
 
 Zonder deze map gebruikt de app Verdana en toont hij geen logo.
 

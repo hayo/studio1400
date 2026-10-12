@@ -5,6 +5,7 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 ## Afspraken
 
 - Gebruiksgemak gaat voor alles. Grote tikvlakken (minimaal 56 px), geen gebaren of verborgen bediening voor bezoekers.
+- Geen vet: de huisstijl heeft alleen RO Sans regular en italic. Hiërarchie met grootte en kleur; `font-synthesis: none` voorkomt nagemaakt vet.
 - Rijkshuisstijl van DPC: lintblauw `#154273` voor structuur (kopbalk, speler, koppen), robijnrood `#ca005d` als accent (gekozen ministerie, afspeelknoppen, voortgang, primaire knoppen), hemelblauw `#007bc7` alleen voor focus. Tekst zwart, RO Sans. Logo boven in het midden.
 - Uitstraling: witte kaarten (radius 16 px, zachte schaduw) op lichtblauwgrijze achtergrond `#edf1f6`. Kleuren staan als custom properties in `:root` van `app.css`.
 - Code compact houden: geen herhaling, korte helpers, alleen commentaar dat iets uitlegt wat de code niet zegt. Achtergrond en learnings horen in dit bestand, niet in de code.
@@ -25,7 +26,7 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Opnames: beheerder kiest een map via `<input webkitdirectory>`. Bestanden gaan als blob in IndexedDB (`studio1400`; stores `meta`, `opnames`, `audio`, `huisstijl`). Ze gaan nooit online.
 - Elke inleesronde krijgt een batch-id. Oude records gaan pas weg als de nieuwe ronde gelukt is (`ruimOp`).
 - Map-indeling: eerste submap = ministerie. Submappen met `_` worden overgeslagen. `_huisstijl` levert lettertypen (FontFace "RO Sans", of "RO Serif" bij `serif` zonder `sans`) en een logo (svg/png met `logo` in de naam). Fonts met `icon` in de naam worden overgeslagen.
-- Aangeleverde huisstijlbestanden (staan op de iPad, niet in de repo): `header-logo.svg` (lint met beeldmerk, 50×100), `rijks-sans-regular.woff2`, `rijks-sans-italic.woff2`, `ro-serif-italic.woff2`, `ro-icons.woff2`. Een vette RO Sans ontbreekt; de browser maakt vet nu zelf.
+- Aangeleverde huisstijlbestanden (staan op de iPad, niet in de repo): `header-logo.svg` (lint met beeldmerk, 50×100), `rijks-sans-regular.woff2`, `rijks-sans-italic.woff2`, `ro-serif-italic.woff2`, `ro-icons.woff2`.
 - Volgnummers vooraan (`01 - `, `1. `) bepalen de volgorde en worden niet getoond. Een los nummer (`10 Titel`) alleen weg als een buur met `0` begint.
 - Beheer openen: 3 s drukken op de blauwe balk. Rust-reset na 2 min zonder gebruik (niet tijdens afspelen); updates van de service worker gaan dan ook in.
 - `VERSIE` staat in `app.js` én `sw.js`. Altijd allebei ophogen.
@@ -64,6 +65,5 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 ## Open punten
 
 - Testen op een echte iPad: afspelen na tik, map inlezen, blijvende opslag, Begeleide toegang.
-- Vette RO Sans (`rijks-sans-bold.woff2`) aanleveren in `_huisstijl`.
 - Kleuren van communicatierijk.nl zijn niet bekeken (browser niet gebruikt). Robijnrood komt uit de Rijkshuisstijl; nog vergelijken met de site.
 - VoiceOver op iPad: controleren of de lijsten als lijst worden voorgelezen (WebKit laat dat soms vallen bij `list-style: none`).
