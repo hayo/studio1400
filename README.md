@@ -58,7 +58,7 @@ Zonder deze map gebruikt de app Verdana en toont hij geen logo.
 ## Opnames inlezen of bijwerken
 
 1. Zet de map op de iPad, bijvoorbeeld in **Bestanden → Op mijn iPad**. Dat kan met een USB-stick, AirDrop of OneDrive.
-2. Open **Beheer**: houd de blauwe balk bovenaan 3 seconden ingedrukt. Staan er nog geen opnames op de iPad, dan zie je meteen een knop.
+2. Open **Beheer**: houd de witte balk bovenaan met **Studio 1400** 3 seconden ingedrukt. Staan er nog geen opnames op de iPad, dan zie je meteen een knop.
 3. Tik op **Map kiezen** en kies de map `Studio1400`.
 4. Wacht tot de app **Klaar** meldt.
 

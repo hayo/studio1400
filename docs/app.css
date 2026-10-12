@@ -83,59 +83,47 @@ button:active { transform: scale(0.98); }
   white-space: nowrap;
 }
 
-/* ---------- Kop ---------- */
+/* ---------- Kop: één witte balk, het lint hangt vanaf de bovenrand ---------- */
 
-.kop { padding-top: env(safe-area-inset-top); }
-
-/* Het lint hangt vanaf de bovenrand, zoals in de Rijkshuisstijl. */
-.logo-strook {
-  display: flex;
-  justify-content: center;
-  padding: 0 var(--rand) 12px;
+.kop {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: env(safe-area-inset-top) calc(var(--rand) + env(safe-area-inset-right)) 0 calc(var(--rand) + env(safe-area-inset-left));
+  border-bottom: 4px solid var(--lintblauw);
   background: var(--wit);
 }
 
-.logo-strook img {
-  display: block;
-  height: 88px;
-}
-
-.balk {
-  position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 24px;
-  padding: 18px calc(var(--rand) + env(safe-area-inset-right)) 20px calc(var(--rand) + env(safe-area-inset-left));
-  background: var(--lintblauw);
-  color: var(--wit);
-}
-
-.balk::after {
+.kop::after {
   position: absolute;
-  bottom: 0;
+  bottom: -4px;
   left: calc(var(--rand) + env(safe-area-inset-left));
   width: 96px;
-  height: 5px;
+  height: 4px;
   background: var(--robijnrood);
   content: "";
 }
 
-.balk h1 {
+.kop h1 {
+  color: var(--lintblauw);
   font-size: 30px;
-  letter-spacing: -0.01em;
+  line-height: 72px;
 }
 
-.uitleg { opacity: 0.9; }
+.logo-strook img {
+  display: block;
+  height: 72px;
+}
 
 /* ---------- Twee kaarten naast elkaar ---------- */
 
 .inhoud {
   display: grid;
   grid-template-columns: minmax(300px, 36%) 1fr;
-  gap: var(--rand);
+  gap: 20px;
   min-height: 0;
-  padding: var(--rand) calc(var(--rand) + env(safe-area-inset-right)) var(--rand) calc(var(--rand) + env(safe-area-inset-left));
+  padding: 16px calc(var(--rand) + env(safe-area-inset-right)) 16px calc(var(--rand) + env(safe-area-inset-left));
 }
 
 .ministeries,
@@ -144,7 +132,12 @@ button:active { transform: scale(0.98); }
   overflow-y: auto;
   overscroll-behavior: contain;
   border-radius: var(--rond);
-  background: var(--wit);
+
+  /* Schaduw onderaan zolang er nog meer te scrollen is */
+  background:
+    linear-gradient(transparent, var(--wit) 70%) bottom / 100% 48px no-repeat local,
+    radial-gradient(farthest-side at 50% 100%, rgb(21 66 115 / 22%), transparent) bottom / 100% 18px no-repeat scroll,
+    var(--wit);
   box-shadow: var(--schaduw);
 }
 
@@ -159,13 +152,13 @@ button:active { transform: scale(0.98); }
 }
 
 .kolomkop {
-  padding: 20px 24px 8px;
+  padding: 16px 24px 6px;
   color: var(--grijs);
   font-size: 18px;
 }
 
 .opnames-kop {
-  padding: 24px 28px 18px;
+  padding: 18px 28px 14px;
   border-bottom: 1px solid var(--lijn);
 }
 
@@ -173,7 +166,7 @@ button:active { transform: scale(0.98); }
   position: static;
   padding: 0;
   color: var(--lintblauw);
-  font-size: 32px;
+  font-size: 30px;
   line-height: 1.2;
 }
 
@@ -188,7 +181,7 @@ button:active { transform: scale(0.98); }
   list-style: none;
 }
 
-#lijst-ministeries { padding: 4px 12px 16px; }
+#lijst-ministeries { padding: 2px 12px 16px; }
 
 /* Ministeries */
 
@@ -197,9 +190,9 @@ button:active { transform: scale(0.98); }
   align-items: center;
   gap: 14px;
   width: 100%;
-  min-height: 72px;
-  margin-bottom: 4px;
-  padding: 14px 16px;
+  min-height: 64px;
+  margin-bottom: 2px;
+  padding: 10px 16px;
   border: 0;
   border-radius: 12px;
   background: transparent;
@@ -370,8 +363,8 @@ button:active { transform: scale(0.98); }
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 24px;
-  padding: 18px calc(var(--rand) + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(var(--rand) + env(safe-area-inset-left));
+  gap: 20px;
+  padding: 12px calc(var(--rand) + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(var(--rand) + env(safe-area-inset-left));
   background: var(--lintblauw);
   color: var(--wit);
 }
@@ -379,8 +372,8 @@ button:active { transform: scale(0.98); }
 .speler-knop {
   display: grid;
   place-items: center;
-  width: 84px;
-  height: 84px;
+  width: 72px;
+  height: 72px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -400,13 +393,20 @@ button:active { transform: scale(0.98); }
 .speler-knop:focus-visible { outline-color: var(--wit); }
 
 .speler-teken {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
 }
 
 .speler-teken.afspelen { margin-left: 4px; }
 
-.speler-midden { min-width: 0; }
+/* Ministerie en titel op één regel, de tijdlijn eronder */
+.speler-midden {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 12px;
+  min-width: 0;
+}
 
 .speler-ministerie,
 .speler-titel {
@@ -416,6 +416,7 @@ button:active { transform: scale(0.98); }
 }
 
 .speler-ministerie {
+  max-width: 24ch;
   font-size: 17px;
   opacity: 0.8;
 }
@@ -425,6 +426,7 @@ button:active { transform: scale(0.98); }
 }
 
 .speler-tijdlijn {
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;

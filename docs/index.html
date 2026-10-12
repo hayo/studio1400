@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Studio 1400">
-  <meta name="theme-color" content="#154273">
+  <meta name="theme-color" content="#ffffff">
   <title>Studio 1400</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="iconen/icoon-180.png">
@@ -25,17 +25,14 @@
     <symbol id="i-koptelefoon" viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="2.5" y="13" width="5" height="8" rx="2"/><rect x="16.5" y="13" width="5" height="8" rx="2"/></symbol>
   </svg>
 
-  <header class="kop">
+  <header class="kop" id="kop">
+    <h1 id="titel">Studio 1400</h1>
     <div class="logo-strook" id="logo-strook" hidden></div>
-    <div class="balk" id="balk">
-      <h1 id="titel">Studio 1400</h1>
-      <p class="uitleg">Kies een ministerie. Tik daarna op een opname om te luisteren.</p>
-    </div>
   </header>
 
   <main class="inhoud">
     <section class="ministeries" aria-labelledby="kop-ministeries">
-      <h2 id="kop-ministeries" class="kolomkop">Ministeries</h2>
+      <h2 id="kop-ministeries" class="kolomkop">Kies een ministerie</h2>
       <ul id="lijst-ministeries" class="lijst"></ul>
     </section>
 

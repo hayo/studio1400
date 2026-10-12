@@ -28,7 +28,7 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Map-indeling: eerste submap = ministerie. Submappen met `_` worden overgeslagen. `_huisstijl` levert lettertypen (FontFace "RO Sans", of "RO Serif" bij `serif` zonder `sans`) en een logo (svg/png met `logo` in de naam). Fonts met `icon` in de naam worden overgeslagen.
 - Aangeleverde huisstijlbestanden (staan op de iPad, niet in de repo): `header-logo.svg` (lint met beeldmerk, 50×100), `rijks-sans-regular.woff2`, `rijks-sans-italic.woff2`, `ro-serif-italic.woff2`, `ro-icons.woff2`.
 - Volgnummers vooraan (`01 - `, `1. `) bepalen de volgorde en worden niet getoond. Een los nummer (`10 Titel`) alleen weg als een buur met `0` begint.
-- Beheer openen: 3 s drukken op de blauwe balk. Rust-reset na 2 min zonder gebruik (niet tijdens afspelen); updates van de service worker gaan dan ook in.
+- Beheer openen: 3 s drukken op de kop (`#kop`). Rust-reset na 2 min zonder gebruik (niet tijdens afspelen); updates van de service worker gaan dan ook in.
 - `VERSIE` staat in `app.js` én `sw.js`. Altijd allebei ophogen.
 
 ## Learnings iPad en Safari
@@ -53,13 +53,16 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Overgangen op knoppen (150 ms): wacht in tests even voor een schermafbeelding. `prefers-reduced-motion` zet alle animaties uit.
 - De meldingen na inlezen pas tonen als de bibliotheek opnieuw is geladen, anders laat Beheer verouderde opslaggegevens zien.
 - Een iconenfont in `_huisstijl` zou zonder filter als gewone RO Sans laden en tekst in iconen veranderen. Daarom slaat `LETTER` namen met `icon` over.
-- Het logo hangt zonder marge vanaf de bovenrand (88 px hoog), zoals het lint in de Rijkshuisstijl.
+- Kop is één witte balk van 72 px: titel links, logo (72 px) in het midden vanaf de bovenrand, lintblauwe lijn met robijnrood stukje eronder. Een aparte blauwe balk plus logostrook kostte zo veel hoogte dat liggend maar 4 ministeries zichtbaar waren.
+- Hoogtebudget liggend (1180×820): kop 76, speler 100, marges 32. Dan passen 8 van de 12 ministeries; de rest scrollt, met een schaduw onderaan als hint. Staand passen alle 12. Uitleg staat in de kolomkop ("Kies een ministerie"), niet in de kop.
+- Ministerie en titel staan in de speler op één regel om hoogte te sparen.
 - `vnu` weigert localhost-URL's. Controleer bestanden direct; de CSP-meldingen (info) zijn dan een bijeffect van `file:`.
 
 ## Testen
 
 - Validatie: alle vijf de controles hierboven zonder fouten (bron én gerenderde DOM, op `webkitdirectory` na).
 - Getest in Chromium met Playwright: inlezen (mp3 CBR/VBR/MPEG-2, mp3 met hoes, m4a, wav), duur gelijk aan ffprobe, afspelen, zoeken, pauze, lang drukken, rust-reset, twee keer inlezen zonder dubbelingen, wissen, offline herladen.
+- Playwright kan bij het uploaden van een map geen bestanden lezen uit mappen met een trema (`Financiën`). Dat is een testprobleem; de app meldt het netjes onder "Niet gelukt".
 - WebKit kon in de testomgeving niet worden gedownload. Een test op een echte iPad is nog nodig.
 
 ## Open punten

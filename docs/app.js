@@ -7,7 +7,7 @@
  * Verhoog VERSIE hier én in sw.js bij elke wijziging.
  */
 
-const VERSIE = '1.1.2';
+const VERSIE = '1.1.3';
 const RUST_NA_MS = 2 * 60 * 1000;
 const LANG_DRUKKEN_MS = 3000;
 const UPDATE_ELKE_MS = 6 * 60 * 60 * 1000;
@@ -675,14 +675,14 @@ async function wisOpnames() {
 }
 
 function bindBeheer() {
-  // Verborgen ingang voor de beheerder: 3 seconden op de blauwe balk drukken.
+  // Verborgen ingang voor de beheerder: 3 seconden op de kop drukken.
   let timer;
   const stop = () => clearTimeout(timer);
-  el.balk.addEventListener('pointerdown', () => {
+  el.kop.addEventListener('pointerdown', () => {
     stop();
     timer = setTimeout(openBeheer, LANG_DRUKKEN_MS);
   });
-  for (const t of ['pointerup', 'pointercancel', 'pointerleave']) el.balk.addEventListener(t, stop);
+  for (const t of ['pointerup', 'pointercancel', 'pointerleave']) el.kop.addEventListener(t, stop);
   document.addEventListener('contextmenu', (e) => e.preventDefault());
   el.knopLeegBeheer.addEventListener('click', openBeheer);
   el.knopSluiten.addEventListener('click', () => { if (!bezig) el.beheer.close(); });
