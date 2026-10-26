@@ -65,8 +65,9 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 
 ## Instructies voor beheerders
 
-- Twee pdf's (A4, oktober 2026): "Opnames bijwerken op de iPad" (USB-stick, naamgeving) en "De iPad als kiosk" (Begeleide toegang, werking van de app). Ze staan niet in de repo.
-- Opgemaakt met HTML/CSS en WeasyPrint, kleuren uit `app.css`, geen vet. RO Sans en het logo waren niet beschikbaar; Source Sans 3 regular en italic als vervanger.
+- Twee pdf's van elk 2 pagina's A4 (oktober 2026): "Opnames bijwerken op de iPad" (USB-stick, naamgeving) en "De iPad als kiosk" (Begeleide toegang, werking van de app). Hayo wil ze zo compact. Ze staan niet in de repo.
+- Opgemaakt met HTML/CSS en WeasyPrint, kleuren uit `app.css`, geen vet. RO Sans en `header-logo.svg` uit de aangeleverde huisstijlbestanden; het logo alleen op pagina 1, in het midden vanaf de bovenrand.
+- `rijks-sans-regular.woff2` en `-italic` zijn variabele fonts (RijksSansVF, `wght` 200–800, standaard 400). Zonder `font-weight` krijg je regular.
 - Pas de instructies aan als iets in Beheer, de map-indeling of de naamregels verandert.
 
 ## Testen
