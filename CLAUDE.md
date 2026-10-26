@@ -58,6 +58,16 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Ministerie en titel staan in de speler op één regel om hoogte te sparen.
 - Beheer moet zonder scrollen passen op 1133×744 (iPad mini liggend): letter 17 px, knoppen 48 px (alleen voor de beheerder), Sluiten bovenin naast de titel, Opslag en App naast elkaar. Gemeten: 679 px hoog met waarschuwing en een lange melding.
 - `vnu` weigert localhost-URL's. Controleer bestanden direct; de CSP-meldingen (info) zijn dan een bijeffect van `file:`.
+- Kies je bij Map kiezen één ministeriemap, dan wordt die map het enige ministerie (`alleenLos` in `deelIn`). Instructies laten daarom altijd de bovenste map `Studio1400` kiezen.
+- Begeleide toegang overleeft geen herstart. Daarom automatische iPadOS-updates uit en de iPad aan de lader. Na een herstart: app openen en Begeleide toegang opnieuw starten.
+- Begeleide toegang stoppen op iPadOS 26: drie keer drukken en de code invoeren. Op 18 en eerder kon ook dubbelklikken met Face ID of Touch ID.
+- In instructies heet `_` een "laag streepje". De README zegt "liggend streepje", maar dat is meestal `-`.
+
+## Instructies voor beheerders
+
+- Twee pdf's (A4, oktober 2026): "Opnames bijwerken op de iPad" (USB-stick, naamgeving) en "De iPad als kiosk" (Begeleide toegang, werking van de app). Ze staan niet in de repo.
+- Opgemaakt met HTML/CSS en WeasyPrint, kleuren uit `app.css`, geen vet. RO Sans en het logo waren niet beschikbaar; Source Sans 3 regular en italic als vervanger.
+- Pas de instructies aan als iets in Beheer, de map-indeling of de naamregels verandert.
 
 ## Testen
 
