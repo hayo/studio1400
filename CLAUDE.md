@@ -62,6 +62,8 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Begeleide toegang overleeft geen herstart. Daarom automatische iPadOS-updates uit en de iPad aan de lader. Na een herstart: app openen en Begeleide toegang opnieuw starten.
 - Begeleide toegang stoppen op iPadOS 26: drie keer drukken en de code invoeren. Op 18 en eerder kon ook dubbelklikken met Face ID of Touch ID.
 - In instructies heet `_` een "laag streepje". De README zegt "liggend streepje", maar dat is meestal `-`.
+- De Safari-waarschuwing in Beheer alleen op iPad en iPhone (`isIos`), anders verschijnt hij ook in Chrome op een pc. iPadOS doet zich voor als Mac; herken een iPad aan `Macintosh` plus `maxTouchPoints > 1`. Een echte iPad meldt 5. Chromium met `hasTouch` meldt 1, dus zet in tests `maxTouchPoints` zelf op 5.
+- axe-core injecteren in Playwright botst met de CSP van de app. Gebruik `bypassCSP: true` in de testcontext.
 
 ## Instructies voor beheerders
 

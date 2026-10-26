@@ -7,7 +7,7 @@
  * Verhoog VERSIE hier én in sw.js bij elke wijziging.
  */
 
-const VERSIE = '1.1.4';
+const VERSIE = '1.1.5';
 const RUST_NA_MS = 2 * 60 * 1000;
 const LANG_DRUKKEN_MS = 3000;
 const UPDATE_ELKE_MS = 6 * 60 * 60 * 1000;
@@ -244,6 +244,8 @@ function meldStatus(tekst) {
 }
 
 const isBeginschermApp = () => ['standalone', 'fullscreen'].some((m) => matchMedia(`(display-mode: ${m})`).matches) || navigator.standalone === true;
+// iPadOS doet zich voor als Mac. Een Mac met aanraakscherm bestaat niet.
+const isIos = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
 /* ---------- Bibliotheek tonen ---------- */
 
@@ -625,7 +627,7 @@ async function laadHuisstijl() {
 
 function openBeheer() {
   if (el.beheer.open) return;
-  el.beheerWaarschuwing.hidden = isBeginschermApp();
+  el.beheerWaarschuwing.hidden = !isIos() || isBeginschermApp();
   if (!bezig) toonBeheerMelding('');
   toonOpslag();
   el.beheer.showModal();
