@@ -1,0 +1,556 @@
+/* Instructies Studio 1400 — A4 voor WeasyPrint. Kleuren uit docs/app.css. */
+
+@font-face {
+  font-family: "RO Sans";
+  src: url("huisstijl/rijks-sans-regular.woff2");
+}
+
+@font-face {
+  font-family: "RO Sans";
+  font-style: italic;
+  src: url("huisstijl/rijks-sans-italic.woff2");
+}
+
+:root {
+  --lintblauw: #154273;
+  --robijnrood: #ca005d;
+  --robijnrood-tint: #fae6ef;
+  --achtergrond: #edf1f6;
+  --tint: #e3eaf2;
+  --grijs: #535353;
+  --lijn: #d9e0e8;
+  --uit: #9aa7b6;
+}
+
+@page {
+  size: a4;
+  margin: 13mm 18mm 18mm;
+
+  @bottom-left {
+    color: var(--grijs);
+    font: 7.5pt "RO Sans", sans-serif;
+  }
+
+  @bottom-right {
+    content: "Pagina " counter(page) " van " counter(pages);
+    color: var(--grijs);
+    font: 7.5pt "RO Sans", sans-serif;
+  }
+}
+
+@page :first { margin-top: 0; }
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: #000;
+  font: 9.6pt/1.36 "RO Sans", sans-serif;
+}
+
+h1,
+h2,
+h3,
+p,
+ol,
+ul {
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+}
+
+/* ---------- Kop van pagina 1: logo in het midden vanaf de bovenrand ---------- */
+
+.logo {
+  display: block;
+  width: 34pt;
+  height: 68pt;
+  margin: 0 auto 11pt;
+}
+
+.kopregel {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 5pt;
+  border-bottom: 1.4pt solid var(--lintblauw);
+  color: var(--grijs);
+  font-size: 8.5pt;
+}
+
+.kopregel::after {
+  position: absolute;
+  bottom: -1.9pt;
+  left: 0;
+  width: 62pt;
+  height: 2.3pt;
+  background: var(--robijnrood);
+  content: "";
+}
+
+.kopregel span:first-child { color: var(--lintblauw); }
+
+h1 {
+  margin-top: 13pt;
+  color: var(--lintblauw);
+  font-size: 21pt;
+  line-height: 1.25;
+}
+
+.onder {
+  margin-top: 2pt;
+  color: var(--grijs);
+  font-size: 11pt;
+}
+
+.intro {
+  margin-top: 9pt;
+  font-size: 10.2pt;
+}
+
+h2 {
+  display: flex;
+  margin: 11.3pt 0 4pt;
+  color: var(--lintblauw);
+  font-size: 12.5pt;
+  line-height: 1.3;
+}
+
+h2 .nr {
+  width: 17pt;
+  color: var(--robijnrood);
+}
+
+h3 {
+  margin: 13pt 0 6pt;
+  color: var(--lintblauw);
+  font-size: 10.6pt;
+}
+
+p + p { margin-top: 4pt; }
+
+.scherm p { margin: 0; }
+
+.klein {
+  margin-top: 8pt;
+  color: var(--grijs);
+  font-size: 8.6pt;
+}
+
+/* ---------- Kolommen ---------- */
+
+.twee {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 20pt;
+}
+
+.twee > * { min-width: 0; }
+
+.smal-links { grid-template-columns: 210pt 1fr; }
+.breed-links { grid-template-columns: 269pt 1fr; }
+.los { margin-top: 7pt; }
+.ruim { margin-top: 17pt; }
+.naast-kop { margin-top: 31pt; }
+.nieuwe-pagina { break-before: page; }
+
+/* ---------- Woorden uit de app of de iPad ---------- */
+
+.ui,
+.naam {
+  padding: 0 2pt;
+  border-radius: 2pt;
+  background: var(--tint);
+  color: var(--lintblauw);
+  white-space: nowrap;
+}
+
+.naam {
+  background: var(--achtergrond);
+  color: #000;
+}
+
+.kader .naam { background: #fff; }
+
+.map { color: var(--lintblauw); }
+
+.ui img {
+  width: 8pt;
+  height: 8pt;
+  vertical-align: -1pt;
+}
+
+i { font-style: italic; }
+
+/* ---------- Stappen en opsommingen ---------- */
+
+.stappen {
+  list-style: none;
+  counter-reset: stap;
+}
+
+.stappen li {
+  position: relative;
+  padding-left: 20pt;
+  counter-increment: stap;
+}
+
+.stappen[start="3"] { counter-reset: stap 2; }
+
+.stappen li::before {
+  position: absolute;
+  top: 0.5pt;
+  left: 0;
+  width: 13.6pt;
+  height: 13.6pt;
+  border-radius: 50%;
+  background: var(--robijnrood);
+  color: #fff;
+  content: counter(stap);
+  font-size: 7.5pt;
+  line-height: 13.6pt;
+  text-align: center;
+}
+
+.stippen { list-style: none; }
+
+.stippen li {
+  position: relative;
+  padding-left: 12.8pt;
+}
+
+.stippen li::before {
+  position: absolute;
+  top: 4pt;
+  left: 1.2pt;
+  width: 4.5pt;
+  height: 4.5pt;
+  background: var(--lintblauw);
+  content: "";
+}
+
+.vinkjes { list-style: none; }
+
+.vinkjes li {
+  position: relative;
+  padding-left: 17pt;
+}
+
+.vinkjes li::before {
+  position: absolute;
+  top: 1pt;
+  left: 0;
+  width: 11.1pt;
+  height: 11.1pt;
+  border: 1pt solid var(--lintblauw);
+  border-radius: 2pt;
+  background: #fff;
+  content: "";
+}
+
+/* ---------- Kaders ---------- */
+
+.kader {
+  padding: 8pt 12pt 9pt 11pt;
+  border-left: 3pt solid var(--lintblauw);
+  border-radius: 0 6pt 6pt 0;
+  background: var(--achtergrond);
+}
+
+.kader-titel {
+  margin-bottom: 2pt;
+  color: var(--lintblauw);
+  font-size: 8.8pt;
+}
+
+.let-op {
+  border-left-color: var(--robijnrood);
+  background: var(--robijnrood-tint);
+}
+
+.let-op .kader-titel { color: var(--robijnrood); }
+
+/* ---------- Tabellen ---------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8.8pt;
+  line-height: 1.32;
+}
+
+th,
+td {
+  padding: 3.4pt 6.8pt;
+  border-bottom: 0.7pt solid var(--lijn);
+  font-weight: normal;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  border-bottom: 0;
+  background: var(--tint);
+  color: var(--lintblauw);
+}
+
+.instellen th:nth-child(1) { width: 18%; }
+.instellen th:nth-child(2) { width: 44%; }
+.opties th:nth-child(1) { width: 37%; }
+.opties th:nth-child(2) { width: 16%; }
+.misgaat th:nth-child(1) { width: 34%; }
+.meldingen th:nth-child(1) { width: 38%; }
+.voorbeelden th:nth-child(1) { width: 54%; }
+
+td small {
+  display: block;
+  color: var(--grijs);
+  font-size: 8pt;
+}
+
+.label {
+  margin-left: 3pt;
+  padding: 0 3pt;
+  border-radius: 2pt;
+  background: var(--lintblauw);
+  color: #fff;
+  font-size: 7pt;
+}
+
+.fout { color: var(--robijnrood); }
+
+.label.fout {
+  background: var(--robijnrood);
+  color: #fff;
+}
+
+/* ---------- Mapstructuur ---------- */
+
+.boom {
+  padding: 8pt 11pt;
+  border-radius: 6pt;
+  background: var(--achtergrond);
+  font-size: 8.8pt;
+  line-height: 13.3pt;
+  list-style: none;
+}
+
+.boom li {
+  display: flex;
+  align-items: center;
+}
+
+.boom img {
+  width: 9pt;
+  margin-right: 5.5pt;
+}
+
+.boom .bestand img {
+  width: 6.3pt;
+  margin: 0 7.5pt 0 1.4pt;
+}
+
+.boom .d1 { padding-left: 14.2pt; }
+.boom .d2 { padding-left: 28.4pt; }
+.boom .uit { color: var(--grijs); }
+
+.boom em {
+  margin-left: auto;
+  color: var(--grijs);
+  font-size: 7.6pt;
+}
+
+/* ---------- Schets van het scherm ---------- */
+
+.schets {
+  display: grid;
+  grid-template-columns: 238pt 1fr;
+  column-gap: 20pt;
+  align-items: center;
+}
+
+.ipad {
+  padding: 6.3pt;
+  border-radius: 12pt;
+  background: #1d1d1f;
+}
+
+.scherm {
+  overflow: hidden;
+  border-radius: 4pt;
+  background: var(--achtergrond);
+  font-size: 5.6pt;
+  line-height: 1.3;
+}
+
+.s-kop {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 21.3pt;
+  padding: 0 6pt 0 8.5pt;
+  border-bottom: 1pt solid var(--lintblauw);
+  background: #fff;
+  color: var(--lintblauw);
+  font-size: 8pt;
+}
+
+.s-kop::after {
+  position: absolute;
+  bottom: -1.2pt;
+  left: 8.5pt;
+  width: 25.5pt;
+  height: 1.7pt;
+  background: var(--robijnrood);
+  content: "";
+}
+
+.s-kop .s-logo {
+  position: absolute;
+  top: 0;
+  left: 107.7pt;
+  width: 10.2pt;
+  height: 20.4pt;
+}
+
+.s-kop .s-knop {
+  width: 9pt;
+  height: 9pt;
+  margin-left: auto;
+}
+
+.s-inhoud {
+  display: grid;
+  grid-template-columns: 76.7pt 1fr;
+  gap: 5pt;
+  padding: 5pt 6.2pt;
+}
+
+.s-kaart {
+  padding: 4pt 4.3pt;
+  border-radius: 3pt;
+  background: #fff;
+}
+
+.s-kolomkop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5pt;
+  color: var(--grijs);
+  font-size: 5.2pt;
+}
+
+.s-min {
+  padding: 2.7pt 3.4pt;
+  border-radius: 1.5pt;
+}
+
+.s-min.gekozen {
+  background: var(--robijnrood);
+  color: #fff;
+}
+
+.s-opname {
+  display: flex;
+  align-items: center;
+  padding: 3pt 0;
+  border-bottom: 0.6pt solid var(--lijn);
+}
+
+.s-opname::before {
+  width: 9.1pt;
+  height: 9.1pt;
+  margin-right: 4pt;
+  border-radius: 50%;
+  background: var(--robijnrood);
+  content: "";
+}
+
+.s-opname span:last-child {
+  margin-left: auto;
+  color: var(--grijs);
+}
+
+.s-speler {
+  display: flex;
+  align-items: center;
+  height: 24.1pt;
+  padding: 0 6pt 0 8.5pt;
+  background: var(--lintblauw);
+  color: #fff;
+}
+
+.s-speler::before {
+  width: 13pt;
+  height: 13pt;
+  margin-right: 5pt;
+  border-radius: 50%;
+  background: var(--robijnrood);
+  content: "";
+}
+
+.s-lijn {
+  flex: 1;
+  height: 1.7pt;
+  margin: 0 6pt;
+  background: linear-gradient(to right, var(--robijnrood) 35%, #fff 35%);
+}
+
+/* Nummer in de schets en in de uitleg ernaast */
+.punt {
+  display: inline-block;
+  flex: none;
+  width: 11.6pt;
+  height: 11.6pt;
+  border: 0.7pt solid var(--lintblauw);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--lintblauw);
+  font-size: 6pt;
+  line-height: 10.2pt;
+  text-align: center;
+}
+
+.s-kop .punt { margin-left: 3pt; }
+
+.uitleg {
+  list-style: none;
+  counter-reset: punt;
+}
+
+.uitleg li {
+  position: relative;
+  padding-left: 18.7pt;
+  counter-increment: punt;
+}
+
+.uitleg li::before {
+  position: absolute;
+  top: 0.8pt;
+  left: 0;
+  width: 11.9pt;
+  height: 11.9pt;
+  border-radius: 50%;
+  background: var(--lintblauw);
+  color: #fff;
+  content: counter(punt);
+  font-size: 7pt;
+  line-height: 11.9pt;
+  text-align: center;
+}
+
+/* Ruimte tussen de punten van een lijst */
+.stappen li + li { margin-top: 5.5pt; }
+.uitleg li + li { margin-top: 4.5pt; }
+
+.stippen li + li,
+.vinkjes li + li { margin-top: 3.2pt; }
+
+/* Kop van een pagina zonder nummer */
+.groot {
+  display: block;
+  margin: 0;
+  font-size: 18pt;
+  line-height: 1.25;
+}

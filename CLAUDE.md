@@ -69,11 +69,13 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 
 ## Instructies voor beheerders
 
-- Twee pdf's van elk 2 pagina's A4 (oktober 2026): "Opnames bijwerken op de iPad" (USB-stick, naamgeving) en "De iPad als kiosk" (Begeleide toegang, werking van de app). Hayo wil ze zo compact. Ze staan in `instructies/` (buiten `docs/`, dus niet in de app). De HTML- en CSS-bronnen staan niet in de repo.
+- Twee pdf's van elk 2 pagina's A4 (oktober 2026): "Opnames bijwerken op de iPad" (USB-stick, naamgeving) en "De iPad als kiosk" (Begeleide toegang, werking van de app). Hayo wil ze zo compact. Ze staan in `instructies/` (buiten `docs/`, dus niet in de app). Bronnen in `instructies/bron/`: twee HTML-bestanden, gedeelde `instructies.css`, `iconen/`. Opnieuw maken met `instructies/bron/maak-pdf.sh`.
 - Opgemaakt met HTML/CSS en WeasyPrint, kleuren uit `app.css`, geen vet. RO Sans en `header-logo.svg` uit de aangeleverde huisstijlbestanden; het logo alleen op pagina 1, in het midden vanaf de bovenrand.
+- De huisstijlbestanden horen in `instructies/bron/huisstijl/` (in `.gitignore`): `header-logo.svg`, `rijks-sans-regular.woff2`, `rijks-sans-italic.woff2`.
 - `rijks-sans-regular.woff2` en `-italic` zijn variabele fonts (RijksSansVF, `wght` 200–800, standaard 400). Zonder `font-weight` krijg je regular.
 - Pas de instructies aan als iets in Beheer, de map-indeling of de naamregels verandert.
-- Nog bijwerken (november 2026): beide pdf's noemen nog 3 s drukken op de witte balk. Moet worden: tik op de knop met de ronde pijl rechts bovenin. In "De iPad als kiosk" bij afschermen die knop omcirkelen in plaats van de witte balk.
+- De voettekst staat per document in een `<style>` met `@page`. `string-set` werkt in WeasyPrint, maar `vnu` kent het niet.
+- Omcirkelen van de knop in de kop is een vaste stap bij Begeleide toegang starten, zodat bezoekers niet in Beheer komen.
 
 ## Testen
 
