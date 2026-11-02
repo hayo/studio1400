@@ -28,7 +28,7 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Map-indeling: eerste submap = ministerie. Submappen met `_` worden overgeslagen. `_huisstijl` levert lettertypen (FontFace "RO Sans", of "RO Serif" bij `serif` zonder `sans`) en een logo (svg/png met `logo` in de naam). Fonts met `icon` in de naam worden overgeslagen.
 - Aangeleverde huisstijlbestanden (staan op de iPad, niet in de repo): `header-logo.svg` (lint met beeldmerk, 50×100), `rijks-sans-regular.woff2`, `rijks-sans-italic.woff2`, `ro-serif-italic.woff2`, `ro-icons.woff2`.
 - Volgnummers vooraan (`01 - `, `1. `) bepalen de volgorde en worden niet getoond. Een los nummer (`10 Titel`) alleen weg als een buur met `0` begint.
-- Beheer openen: 3 s drukken op de kop (`#kop`). Rust-reset na 2 min zonder gebruik (niet tijdens afspelen); updates van de service worker gaan dan ook in.
+- Beheer openen: knop met ronde pijl rechts in de kop (`#knop-bijwerken`). Die opent Beheer en meteen de mapkiezer; bij Annuleren blijft Beheer open. Rust-reset na 2 min zonder gebruik (niet tijdens afspelen); updates van de service worker gaan dan ook in.
 - `VERSIE` staat in `app.js` én `sw.js`. Altijd allebei ophogen.
 
 ## Learnings iPad en Safari
@@ -64,6 +64,8 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - In instructies heet `_` een "laag streepje". De README zegt "liggend streepje", maar dat is meestal `-`.
 - De Safari-waarschuwing in Beheer alleen op iPad en iPhone (`isIos`), anders verschijnt hij ook in Chrome op een pc. iPadOS doet zich voor als Mac; herken een iPad aan `Macintosh` plus `maxTouchPoints > 1`. Een echte iPad meldt 5. Chromium met `hasTouch` meldt 1, dus zet in tests `maxTouchPoints` zelf op 5.
 - axe-core injecteren in Playwright botst met de CSP van de app. Gebruik `bypassCSP: true` in de testcontext.
+- 3 s drukken op de kop werkte niet op de iPad. Vervangen door een zichtbare knop in de kop (november 2026). Een map opnieuw lezen zonder kiezen kan niet: de toegang tot een gekozen map vervalt.
+- Wil je bezoekers uit Beheer houden, omcirkel dan in Begeleide toegang de knop in de kop. Die werkt dan niet meer.
 
 ## Instructies voor beheerders
 
@@ -71,6 +73,7 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Opgemaakt met HTML/CSS en WeasyPrint, kleuren uit `app.css`, geen vet. RO Sans en `header-logo.svg` uit de aangeleverde huisstijlbestanden; het logo alleen op pagina 1, in het midden vanaf de bovenrand.
 - `rijks-sans-regular.woff2` en `-italic` zijn variabele fonts (RijksSansVF, `wght` 200–800, standaard 400). Zonder `font-weight` krijg je regular.
 - Pas de instructies aan als iets in Beheer, de map-indeling of de naamregels verandert.
+- Nog bijwerken (november 2026): beide pdf's noemen nog 3 s drukken op de witte balk. Moet worden: tik op de knop met de ronde pijl rechts bovenin. In "De iPad als kiosk" bij afschermen die knop omcirkelen in plaats van de witte balk.
 
 ## Testen
 

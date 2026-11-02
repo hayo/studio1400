@@ -7,9 +7,8 @@
  * Verhoog VERSIE hier én in sw.js bij elke wijziging.
  */
 
-const VERSIE = '1.1.5';
+const VERSIE = '1.2.0';
 const RUST_NA_MS = 2 * 60 * 1000;
-const LANG_DRUKKEN_MS = 3000;
 const UPDATE_ELKE_MS = 6 * 60 * 60 * 1000;
 const OVERIG = 'Overige opnames';
 const WINKELS = ['meta', 'opnames', 'audio', 'huisstijl'];
@@ -633,6 +632,12 @@ function openBeheer() {
   el.beheer.showModal();
 }
 
+// Eén tik: Beheer open en meteen het venster om de map te kiezen. Bij Annuleren blijft Beheer open.
+function bijwerken() {
+  openBeheer();
+  if (!bezig) el.invoerMap.click();
+}
+
 async function toonOpslag() {
   const n = [...bibliotheek.values()].reduce((som, g) => som + g.opnames.length, 0);
   const regels = [n ? `${meervoud(n, 'opname', 'opnames')} bij ${meervoud(bibliotheek.size, 'ministerie', 'ministeries')}.` : 'Er staan geen opnames op deze iPad.'];
@@ -677,16 +682,8 @@ async function wisOpnames() {
 }
 
 function bindBeheer() {
-  // Verborgen ingang voor de beheerder: 3 seconden op de kop drukken.
-  let timer;
-  const stop = () => clearTimeout(timer);
-  el.kop.addEventListener('pointerdown', () => {
-    stop();
-    timer = setTimeout(openBeheer, LANG_DRUKKEN_MS);
-  });
-  for (const t of ['pointerup', 'pointercancel', 'pointerleave']) el.kop.addEventListener(t, stop);
   document.addEventListener('contextmenu', (e) => e.preventDefault());
-  el.knopLeegBeheer.addEventListener('click', openBeheer);
+  for (const k of [el.knopBijwerken, el.knopLeegBeheer]) k.addEventListener('click', bijwerken);
   el.knopSluiten.addEventListener('click', () => { if (!bezig) el.beheer.close(); });
   el.beheer.addEventListener('cancel', (e) => { if (bezig) e.preventDefault(); });
   el.knopUpdate.addEventListener('click', zoekUpdate);

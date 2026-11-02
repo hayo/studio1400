@@ -111,6 +111,29 @@ button:active { transform: scale(0.98); }
   line-height: 72px;
 }
 
+.logo-strook { grid-column: 2; }
+
+.knop-bijwerken {
+  display: grid;
+  grid-column: 3;
+  place-items: center;
+  justify-self: end;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--lintblauw);
+}
+
+.knop-bijwerken:active { background: var(--tint); }
+
+.bijwerken-teken {
+  width: 28px;
+  height: 28px;
+}
+
 .logo-strook img {
   display: block;
   height: 72px;
