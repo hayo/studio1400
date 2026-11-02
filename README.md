@@ -47,7 +47,7 @@ Studio1400/
 
 ### Lettertype en logo
 
-RO Sans en het logo horen niet in een openbare repo. Zet ze daarom in de submap `_huisstijl`:
+De app haalt RO Sans en het logo uit de submap `_huisstijl`. De bestanden staan ook in deze repo, in `instructies/bron/huisstijl`. Zet in `_huisstijl`:
 
 - de lettertypebestanden van RO Sans (woff2, woff, ttf of otf). Staat `italic` in de naam, dan wordt het cursief. De app gebruikt geen vette letter.
 - het logo: een svg- of png-bestand met `logo` in de naam, bijvoorbeeld `header-logo.svg`.

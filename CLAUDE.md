@@ -14,7 +14,7 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Geen vermelding van AI-hulp, nergens: geen `Co-Authored-By`, geen sessielinks, geen "generated with" in commits, PR's, code of documentatie.
 - Commits op naam van `Hayo Bethlehem <mail@hayobethlehem.nl>` (zet `git config user.name/user.email` in de clone).
 - Ook dit bestand niet bij naam noemen in code, README of commitberichten. Controleer voor elke push: `git grep -niE 'claude|anthropic' -- docs README.md` moet leeg zijn, en lees het commitbericht na.
-- De repo is public. Geen opnames in de repo. De instructie-pdf's met RO Sans en het logo mogen er wel in (besluit Hayo, oktober 2026).
+- De repo is public. Geen opnames in de repo. RO Sans, het logo en de instructie-pdf's mogen er wel in (besluit Hayo, oktober en november 2026).
 - HTML, CSS en JavaScript volgen de standaarden en zijn semantisch correct. Elke wijziging moet zonder fouten door: W3C Nu HTML Checker (`vnu`, ook met `--css`), `html-validate` (recommended), `stylelint-config-standard`, ESLint (recommended, `eqeqeq`) en axe-core (WCAG 2.2 AA + best practices).
 - Semantiek: `section` met kop voor kolommen en speler (geen `nav`/`footer`), `time datetime` voor duren, `aria-current` voor het gekozen ministerie en de opname in de speler.
 - CSS-klassen in kebab-case (geen BEM `--`). Iconen krijgen een eigen klasse; geen selectors op `svg`.
@@ -26,7 +26,7 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 - Opnames: beheerder kiest een map via `<input webkitdirectory>`. Bestanden gaan als blob in IndexedDB (`studio1400`; stores `meta`, `opnames`, `audio`, `huisstijl`). Ze gaan nooit online.
 - Elke inleesronde krijgt een batch-id. Oude records gaan pas weg als de nieuwe ronde gelukt is (`ruimOp`).
 - Map-indeling: eerste submap = ministerie. Submappen met `_` worden overgeslagen. `_huisstijl` levert lettertypen (FontFace "RO Sans", of "RO Serif" bij `serif` zonder `sans`) en een logo (svg/png met `logo` in de naam). Fonts met `icon` in de naam worden overgeslagen.
-- Aangeleverde huisstijlbestanden (staan op de iPad, niet in de repo): `header-logo.svg` (lint met beeldmerk, 50×100), `rijks-sans-regular.woff2`, `rijks-sans-italic.woff2`, `ro-serif-italic.woff2`, `ro-icons.woff2`.
+- Aangeleverde huisstijlbestanden (op de iPad in `_huisstijl`, en in de repo in `instructies/bron/huisstijl/`): `header-logo.svg` (lint met beeldmerk, 50×100), `rijks-sans-regular.woff2`, `rijks-sans-italic.woff2`, `ro-serif-italic.woff2`, `ro-icons.woff2`.
 - Volgnummers vooraan (`01 - `, `1. `) bepalen de volgorde en worden niet getoond. Een los nummer (`10 Titel`) alleen weg als een buur met `0` begint.
 - Beheer openen: knop met ronde pijl rechts in de kop (`#knop-bijwerken`). Die opent Beheer en meteen de mapkiezer; bij Annuleren blijft Beheer open. Rust-reset na 2 min zonder gebruik (niet tijdens afspelen); updates van de service worker gaan dan ook in.
 - `VERSIE` staat in `app.js` én `sw.js`. Altijd allebei ophogen.
@@ -71,7 +71,6 @@ Lees dit aan het begin van elke sessie. Voeg nieuwe learnings onderaan toe.
 
 - Twee pdf's van elk 2 pagina's A4 (oktober 2026): "Opnames bijwerken op de iPad" (USB-stick, naamgeving) en "De iPad als kiosk" (Begeleide toegang, werking van de app). Hayo wil ze zo compact. Ze staan in `instructies/` (buiten `docs/`, dus niet in de app). Bronnen in `instructies/bron/`: twee HTML-bestanden, gedeelde `instructies.css`, `iconen/`. Opnieuw maken met `instructies/bron/maak-pdf.sh`.
 - Opgemaakt met HTML/CSS en WeasyPrint, kleuren uit `app.css`, geen vet. RO Sans en `header-logo.svg` uit de aangeleverde huisstijlbestanden; het logo alleen op pagina 1, in het midden vanaf de bovenrand.
-- De huisstijlbestanden horen in `instructies/bron/huisstijl/` (in `.gitignore`): `header-logo.svg`, `rijks-sans-regular.woff2`, `rijks-sans-italic.woff2`.
 - `rijks-sans-regular.woff2` en `-italic` zijn variabele fonts (RijksSansVF, `wght` 200–800, standaard 400). Zonder `font-weight` krijg je regular.
 - Pas de instructies aan als iets in Beheer, de map-indeling of de naamregels verandert.
 - De voettekst staat per document in een `<style>` met `@page`. `string-set` werkt in WeasyPrint, maar `vnu` kent het niet.
